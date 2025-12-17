@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noctoon v5.0</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+  <!-- 🌙 Splash / Yükleme Ekranı -->
+  <div id="splashScreen" class="splash active">
+    <img src="assets/logo_dark.svg" alt="Noctoon Logo" class="splash-logo">
+    <p class="splash-text">Noctoon Yükleniyor...</p>
+  </div>
+
+  <!-- 🌗 Navigasyon -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <img id="navLogo" src="assets/logo_dark.svg" alt="Noctoon" class="nav-logo">
+      <span class="nav-title">Noctoon</span>
+    </div>
+    <div class="nav-right">
+      <input type="text" id="searchInput" placeholder="Seri ara..." class="nav-search">
+      <button onclick="app.renderPage('home')" id="nav-home" class="nav-btn active">Ana Sayfa</button>
+      <button onclick="app.renderPage('profile')" id="nav-profile" class="nav-btn">Profil</button>
+      <button onclick="app.renderPage('admin')" id="nav-admin" class="nav-btn">Admin</button>
+      <button id="themeToggle" class="nav-btn">🌙</button>
+      <button id="loginBtn" class="nav-btn login">Giriş</button>
+      <button id="logoutBtn" class="nav-btn logout hidden">Çıkış</button>
+    </div>
+  </nav>
+
+  <!-- 🔐 Giriş Popup -->
+  <div id="loginPopup" class="popup hidden">
+    <div class="popup-content">
+      <h2>Giriş Yap</h2>
+      <input type="text" id="username" placeholder="Kullanıcı adı">
+      <input type="password" id="password" placeholder="Şifre">
+      <button onclick="app.login()">Giriş</button>
+      <button onclick="app.togglePopup(false)" class="close-btn">Kapat</button>
+    </div>
+  </div>
+
+  <!-- 📄 Sayfalar -->
+  <main id="app">
+    <section id="homePage" class="active"></section>
+    <section id="detailPage" class="hidden"></section>
+    <section id="readerPage" class="hidden"></section>
+    <section id="profilePage" class="hidden"></section>
+    <section id="adminPage" class="hidden"></section>
+
+    <!-- ❌ 404 Sayfası -->
+    <section id="notFoundPage" class="hidden text-center py-20">
+      <h1 class="text-6xl font-bold text-blue-500 mb-4">404</h1>
+      <p class="text-gray-400 text-lg mb-6">Aradığın sayfa bulunamadı, Yolcu 🌀</p>
+      <button onclick="app.renderPage('home')" class="btn-primary">Ana Sayfaya Dön</button>
+    </section>
+  </main>
+
+  <!-- 📊 İlerleme Çubuğu -->
+  <div id="progressBar" class="progress-bar"></div>
+
+  <!-- 💡 Ana JS -->
+  <script src="app.js"></script>
+</body>
+</html>

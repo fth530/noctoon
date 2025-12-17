@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ente - Webtoon Okuma Platformu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- İkonlar -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        light: {
+                            bg: '#f8fafc',
+                            card: '#ffffff',
+                            text: '#1e293b'
+                        },
+                        dark: {
+                            900: '#0f0f12', 
+                            800: '#18181b', 
+                            700: '#27272a',
+                        },
+                        accent: {
+                            500: '#8b5cf6', // Mor vurgu
+                            600: '#7c3aed',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'zoom-slow': 'zoomSlow 8s ease-out infinite alternate',
+                        'pulse-slow': 'pulse 3s infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        scaleIn: {
+                            '0%': { opacity: 0, transform: 'translate(-50%, -50%) scale(0.9)' },
+                            '100%': { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' }
+                        },
+                        zoomSlow: {
+                            '0%': { transform: 'scale(1)' },
+                            '100%': { transform: 'scale(1.1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .slide-enter { animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .dark .glass {
+            background: rgba(24, 24, 27, 0.8);
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(24, 24, 27, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Splash Screen Style */
+        #splash {
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+        }
+        #splash.hidden-splash {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-dark-900 text-slate-800 dark:text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- SPLASH SCREEN (Açılış Animasyonu) -->
+    <div id="splash" class="fixed inset-0 flex items-center justify-center bg-dark-900 z-[100]">
+        <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-accent-600 to-pink-500 rounded-2xl flex items-center justify-center text-white font-bold text-4xl shadow-2xl mb-4 mx-auto animate-bounce">
+                E
+            </div>
+            <h1 class="text-4xl font-bold text-white animate-pulse">🌙 Ente</h1>
+            <p class="text-gray-400 text-sm mt-2">Webtoon Platformu</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-gray-200 dark:border-dark-700 h-16 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="app.renderHome()">
+                <div class="relative w-10 h-10">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-accent-600 to-pink-500 rounded-xl transform rotate-6 group-hover:rotate-12 transition-all duration-300 blur-sm opacity-70"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent-500 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-lg border border-white/20 z-10">
+                        <i class="fas fa-bolt text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <span class="text-xl font-black tracking-tighter text-slate-900 dark:text-white leading-none font-sans">
+                        ENTE<span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-pink-500">.</span>
+                    </span>
+                    <span class="text-[9px] font-bold text-slate-400 dark:text-gray-500 tracking-widest uppercase">Webtoon</span>
+                </div>
+            </div>
+
+            <!-- Arama Çubuğu -->
+            <div class="hidden md:flex flex-1 max-w-md mx-8 relative group">
+                <input id="globalSearch" type="text" placeholder="Keşfetmeye başla..." class="w-full bg-slate-100 dark:bg-dark-800 border border-transparent dark:border-dark-700 rounded-full py-2.5 pl-11 pr-12 focus:outline-none focus:bg-white dark:focus:bg-dark-900 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 transition-all text-sm font-medium shadow-sm group-hover:shadow-md">
+                <i class="fas fa-search absolute left-4 top-3.5 text-gray-400 group-hover:text-accent-500 transition-colors"></i>
+                
+                <button onclick="app.toggleSearchModal()" class="absolute right-2 top-1.5 p-1.5 bg-white dark:bg-dark-700 rounded-full text-slate-500 dark:text-gray-400 hover:text-accent-500 hover:bg-slate-50 transition shadow-sm border border-gray-100 dark:border-dark-600">
+                    <i class="fas fa-sliders-h text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Sağ Menü -->
+            <div class="flex items-center gap-3 md:gap-5">
+                <button onclick="app.toggleTheme()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-dark-800 flex items-center justify-center text-slate-600 dark:text-yellow-400 hover:bg-slate-200 dark:hover:bg-dark-700 transition-all focus:outline-none shadow-sm">
+                    <i class="fas fa-sun dark:hidden"></i>
+                    <i class="fas fa-moon hidden dark:block"></i>
+                </button>
+                <div class="h-6 w-px bg-gray-200 dark:bg-dark-700 hidden sm:block"></div>
+                <div id="nav-user-area" class="flex items-center gap-3"></div>
+            </div>
+        </div>
+        
+        <!-- Okuma İlerleme Çubuğu (Reader Progress Bar) -->
+        <div id="reader-progress-container" class="absolute bottom-0 left-0 w-full h-1 bg-transparent hidden">
+            <div id="reader-progress-bar" class="h-full bg-accent-500 transition-all duration-100" style="width: 0%"></div>
+        </div>
+    </nav>
+
+    <!-- Detaylı Arama Modalı -->
+    <div id="search-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="search-modal-bg" onclick="app.toggleSearchModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-2xl bg-white dark:bg-dark-800 rounded-3xl p-6 md:p-8 shadow-2xl border border-gray-100 dark:border-dark-700 opacity-0 scale-95 transition-all duration-300" id="search-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-filter text-accent-500"></i> Detaylı Arama
+                </h3>
+                <button onclick="app.toggleSearchModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <!-- Arama İçeriği -->
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-400 mb-3 uppercase tracking-wide">Türler</label>
+                    <div class="flex flex-wrap gap-2">
+                        ${['Aksiyon', 'Romantik', 'Fantastik', 'Dram', 'Komedi', 'Korku', 'Bilim Kurgu', 'Gerilim', 'Tarihi'].map(g => `
+                            <label class="cursor-pointer">
+                                <input type="checkbox" class="peer sr-only" value="${g}">
+                                <span class="px-4 py-2 rounded-xl bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-700 text-slate-600 dark:text-gray-400 text-sm font-medium transition-all peer-checked:bg-accent-500 peer-checked:text-white peer-checked:border-accent-500 hover:bg-slate-100 dark:hover:bg-dark-700 select-none block">${g}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-400 mb-3 uppercase tracking-wide">Yayın Durumu</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        ${['Tümü', 'Devam Ediyor', 'Tamamlandı', 'Yeni'].map((s, i) => `
+                            <label class="cursor-pointer">
+                                <input type="radio" name="status" class="peer sr-only" ${i===0 ? 'checked' : ''}>
+                                <div class="text-center py-2.5 rounded-xl bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-700 text-slate-600 dark:text-gray-400 text-sm font-medium transition-all peer-checked:bg-slate-800 dark:peer-checked:bg-white peer-checked:text-white dark:peer-checked:text-dark-900 peer-checked:shadow-lg">${s}</div>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t border-gray-100 dark:border-dark-700 flex justify-end gap-4">
+                <button onclick="app.toggleSearchModal()" class="px-6 py-3 rounded-xl font-bold text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-dark-700 transition">Vazgeç</button>
+                <button onclick="app.applyAdvancedFilters()" class="px-8 py-3 rounded-xl font-bold bg-accent-600 text-white shadow-lg shadow-accent-500/30 hover:bg-accent-700 hover:scale-105 transition transform">Sonuçları Göster</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area (Sayfalar buraya yüklenecek) -->
+    <main id="app-container" class="pt-16 flex-grow pb-24 md:pb-10 transition-all duration-300">
+        <!-- JS Content -->
+    </main>
+
+    <!-- Bottom Mobile Nav -->
+    <div class="md:hidden fixed bottom-0 w-full glass border-t border-gray-200 dark:border-dark-700 z-40 pb-safe">
+        <div class="flex justify-around items-center py-3">
+            <button onclick="app.renderHome()" class="flex flex-col items-center text-accent-600 dark:text-accent-500 transition-transform active:scale-95">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Keşfet</span>
+            </button>
+            <button onclick="app.toggleSearchModal()" class="flex flex-col items-center text-gray-400 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95">
+                <i class="fas fa-search text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Ara</span>
+            </button>
+            <button onclick="app.checkProfileClick()" class="flex flex-col items-center text-gray-400 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95">
+                <i class="fas fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Profil</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const app = {
+            container: document.getElementById('app-container'),
+            activeFilter: 'Tümü',
+            heroIndex: 0,
+            heroInterval: null,
+            detailTab: 'Bölümler',
+            currentDetailId: null,
+            currentUser: null,
+            isAdmin: false,
+            readHistory: new Set([101]),
+            series: [],
+            
+            // Son okunanlar (Örnek veri)
+            recentReads: [
+                { seriesId: 1, chapterId: 101, chapterTitle: "Bölüm 1: Başlangıç", progress: 45, date: "Bugün" },
+                { seriesId: 3, chapterId: 301, chapterTitle: "Bölüm 1", progress: 90, date: "Dün" },
+                { seriesId: 2, chapterId: 201, chapterTitle: "Bölüm 1: Giriş", progress: 10, date: "2 gün önce" },
+            ],
+
+            // --- BAŞLATMA VE VERİ YÜKLEME ---
+            init: function() {
+                this.loadData();
+                this.checkTheme();
+                this.initSplash();
+                this.setupSearch();
+                this.checkSession();
+                this.updateNavbar();
+                this.renderHome();
+                
+                // Okuma modu için scroll dinleyicisi
+                window.addEventListener('scroll', this.handleScroll);
+            },
+
+            loadData: function() {
+                // Varsayılan seriler (Data)
+                const defaultSeries = [
+                    {
+                        id: 1,
+                        title: "Gece Avcısı",
+                        author: "Ayşe Yılmaz",
+                        genre: "Aksiyon",
+                        rating: 9.8,
+                        views: 150000,
+                        releaseDay: "Pazartesi",
+                        cover: "",
+                        banner: "",
+                        desc: "Karanlık sokaklarda adalet arayan yalnız bir savaşçının hikayesi. Şehirdeki gizemli olayları çözmek için doğaüstü güçlerini kullanmak zorunda.",
+                        status: "Devam Ediyor",
+                        chapters: [
+                            { id: 104, title: "Bölüm 4", date: "23 dk önce" },
+                            { id: 103, title: "Bölüm 3", date: "2 hafta önce" },
+                            { id: 102, title: "Bölüm 2", date: "1 hafta önce" },
+                            { id: 101, title: "Bölüm 1", date: "2 gün önce" }
+                        ],
+                        comments: [
+                            { user: "KaraKedi", text: "Çizimler inanılmaz!", date: "2 saat önce", likes: 24 }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        title: "Sonsuz Kule",
+                        author: "Metin Demir",
+                        genre: "Fantastik",
+                        rating: 9.5,
+                        views: 89000,
+                        releaseDay: "Salı",
+                        cover: "",
+                        banner: "",
+                        desc: "Her katında farklı bir dünyanın olduğu gizemli bir kule. En tepeye ulaşan kişinin bir dilek hakkı olduğu söyleniyor.",
+                        status: "Yeni",
+                        chapters: [
+                            { id: 202, title: "Bölüm 2", date: "1 saat önce" },
+                            { id: 201, title: "Bölüm 1", date: "Dün" }
+                        ],
+                        comments: []
+                    },
+                    {
+                        id: 3,
+                        title: "Kampüs Günlükleri",
+                        author: "Zeynep K.",
+                        genre: "Romantik",
+                        rating: 9.2,
+                        views: 210000,
+                        releaseDay: "Çarşamba",
+                        cover: "",
+                        banner: "",
+                        desc: "Üniversite hayatının karmaşası içinde filizlenen bir aşk hikayesi.",
+                        status: "Tamamlandı",
+                        chapters: [
+                            { id: 303, title: "Bölüm 3", date: "1 yıl önce" },
+                            { id: 302, title: "Bölüm 2", date: "1 yıl önce" },
+                            { id: 301, title: "Bölüm 1", date: "1 yıl önce" }
+                        ],
+                        comments: []
+                    },
+                    {
+                        id: 4,
+                        title: "Siber Sürgün",
+                        author: "Caner E.",
+                        genre: "Bilim Kurgu",
+                        rating: 8.9,
+                        views: 45000,
+                        releaseDay: "Perşembe",
+                        cover: "",
+                        banner: "",
+                        desc: "2077 yılında, bilincini dijital dünyaya aktaran bir hacker.",
+                        status: "Tamamlandı",
+                        chapters: [{ id: 401, title: "Bölüm 1", date: "1 ay önce" }],
+                        comments: []
+                    },
+                    {
+                        id: 5,
+                        title: "Gizemli Orman",
+                        author: "Elif S.",
+                        genre: "Korku",
+                        rating: 9.1,
+                        views: 67000,
+                        releaseDay: "Cuma",
+                        cover: "",
+                        banner: "",
+                        desc: "Kasabanın yanındaki ormanda kaybolan çocukların hikayesi.",
+                        status: "Devam Ediyor",
+                        chapters: [{ id: 501, title: "Bölüm 1", date: "3 gün önce" }],
+                        comments: []
+                    }
+                ];
+                
+                // Admin panelinden eklenen özel serileri LocalStorage'dan çek
+                const customSeries = JSON.parse(localStorage.getItem("customSeries") || "[]");
+                this.series = [...defaultSeries, ...customSeries];
+            },
+
+            checkSession: function() {
+                const adminLogged = localStorage.getItem("adminLogged");
+                if (adminLogged) {
+                    this.currentUser = "Admin";
+                    this.isAdmin = true;
+                } else {
+                    this.currentUser = localStorage.getItem("currentUser"); // Basic user persistence
+                }
+            },
+
+            // --- AÇILIŞ EKRANI ---
+            initSplash: function() {
+                setTimeout(() => {
+                    const splash = document.getElementById('splash');
+                    if(splash) {
+                        splash.classList.add('hidden-splash');
+                        setTimeout(() => splash.style.display = 'none', 500);
+                    }
+                }, 1500);
+            },
+
+            // --- TEMA YÖNETİMİ ---
+            checkTheme: function() {
+                const savedTheme = localStorage.getItem('noctoon_theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            },
+
+            toggleTheme: function() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('noctoon_theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('noctoon_theme', 'dark');
+                }
+            },
+            
+            // --- ARAMA VE FİLTRELEME ---
+            toggleSearchModal: function() {
+                const modal = document.getElementById('search-modal');
+                const bg = document.getElementById('search-modal-bg');
+                const content = document.getElementById('search-modal-content');
+                
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    void modal.offsetWidth;
+                    bg.classList.remove('opacity-0');
+                    content.classList.remove('opacity-0', 'scale-95');
+                } else {
+                    bg.classList.add('opacity-0');
+                    content.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 300);
+                }
+            },
+            
+            applyAdvancedFilters: function() {
+                this.toggleSearchModal();
+                alert("Filtreler uygulandı! (Demo)");
+            },
+
+            scrollToTop: function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+
+            markAsRead: function(chapterId) {
+                this.readHistory.add(chapterId);
+            },
+
+            addToHistory: function(seriesId, chapterId, chapterTitle) {
+                this.recentReads = this.recentReads.filter(item => item.seriesId !== seriesId);
+                this.recentReads.unshift({
+                    seriesId: seriesId,
+                    chapterId: chapterId,
+                    chapterTitle: chapterTitle,
+                    progress: Math.floor(Math.random() * 20),
+                    date: "Şimdi"
+                });
+                if (this.recentReads.length > 5) {
+                    this.recentReads.pop();
+                }
+            },
+
+            isRead: function(chapterId) {
+                return this.readHistory.has(chapterId);
+            },
+
+            updateNavbar: function() {
+                const navArea = document.getElementById('nav-user-area');
+                if (this.currentUser) {
+                    navArea.innerHTML = `
+                        <button class="w-9 h-9 rounded-full bg-slate-100 dark:bg-dark-800 text-gray-500 dark:text-gray-400 hover:text-accent-500 transition relative">
+                            <i class="fas fa-bell"></i>
+                            <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-dark-800"></span>
+                        </button>
+                        <div onclick="app.checkProfileClick()" class="flex items-center gap-2 cursor-pointer pl-2">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white text-sm shadow-md ring-2 ring-transparent hover:ring-accent-500/50 transition-all">
+                                ${this.currentUser.substring(0,2).toUpperCase()}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    navArea.innerHTML = `
+                        <button onclick="app.renderRegister()" class="bg-slate-900 dark:bg-white text-white dark:text-dark-900 px-5 py-2 rounded-full text-sm font-bold transition hover:scale-105 hover:shadow-lg hover:shadow-slate-500/20 dark:hover:shadow-white/20">
+                            Kayıt Ol
+                        </button>
+                        <button onclick="app.renderLogin()" class="text-slate-600 dark:text-gray-300 hover:text-accent-600 dark:hover:text-white text-sm font-semibold hidden sm:block px-2">
+                            Giriş Yap
+                        </button>
+                    `;
+                }
+            },
+
+            checkProfileClick: function() {
+                if(this.currentUser) {
+                    if(this.isAdmin) {
+                        this.renderAdmin();
+                    } else {
+                        alert("Kullanıcı Profili: " + this.currentUser + "\n(Normal kullanıcı paneli henüz eklenmedi)");
+                        if(confirm("Çıkış yapmak ister misiniz?")) this.logout();
+                    }
+                } else {
+                    this.renderLogin();
+                }
+            },
+
+            logout: function() {
+                this.currentUser = null;
+                this.isAdmin = false;
+                localStorage.removeItem("adminLogged");
+                localStorage.removeItem("currentUser");
+                this.updateNavbar();
+                this.renderHome();
+            },
+
+            setupSearch: function() {
+                const searchInput = document.getElementById('globalSearch');
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase().trim();
+                    if(term.length > 0) {
+                        this.stopHeroSlider();
+                        const filtered = this.series.filter(s => 
+                            s.title.toLowerCase().includes(term) || 
+                            s.author.toLowerCase().includes(term) || 
+                            s.genre.toLowerCase().includes(term)
+                        );
+                        this.renderFilteredList(filtered);
+                    } else {
+                        this.renderHome();
+                    }
+                });
+            },
+
+            // --- SAYFA RENDER FONKSİYONLARI ---
+
+            renderHome: function() {
+                this.stopHeroSlider();
+                this.scrollToTop();
+                this.startHeroSlider();
+                document.getElementById('reader-progress-container').classList.add('hidden');
+                
+                const mostRead = [...this.series].sort((a,b) => b.views - a.views).slice(0, 4);
+                const categories = ['Aksiyon', 'Romantik', 'Fantastik', 'Dram', 'Komedi', 'Korku', 'Bilim Kurgu'];
+
+                let html = `
+                    <div id="hero-slider-content" class="relative w-full h-[450px] md:h-[600px] overflow-hidden bg-dark-900 group cursor-pointer shadow-2xl"></div>
+
+                    <div class="max-w-7xl mx-auto px-4 mt-12 fade-in">
+                        <div class="flex overflow-x-auto gap-4 pb-4 no-scrollbar mb-10">
+                            ${categories.map(cat => `
+                                <button onclick="app.filterByGenre('${cat}')" class="px-6 py-3 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-slate-700 dark:text-gray-300 font-bold whitespace-nowrap hover:bg-accent-500 hover:text-white dark:hover:bg-accent-600 transition shadow-sm">
+                                    ${cat}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div class="flex flex-col lg:flex-row gap-12">
+                            <div class="w-full lg:w-3/4">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-2xl font-bold text-slate-800 dark:text-white">Tüm Seriler</h3>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                    ${this.series.map(item => this.createSeriesCard(item)).join('')}
+                                </div>
+                            </div>
+
+                            <div class="w-full lg:w-1/4 space-y-8">
+                                <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 border border-gray-100 dark:border-dark-700 shadow-lg relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-24 h-24 bg-accent-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                                    <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-5 flex items-center gap-2">
+                                        <i class="fas fa-history text-accent-600 dark:text-accent-400 bg-accent-100 dark:bg-accent-900/30 p-1.5 rounded-lg"></i> Son Okunanlar
+                                    </h3>
+                                    ${this.recentReads.length > 0 ? `
+                                        <div class="space-y-4">
+                                            ${this.recentReads.map(read => {
+                                                const series = this.series.find(s => s.id === read.seriesId);
+                                                if(!series) return '';
+                                                return `
+                                                    <div class="flex gap-3 cursor-pointer group items-center" onclick="app.readChapter(${read.seriesId}, ${read.chapterId})">
+                                                        <div class="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden shadow-sm border border-gray-100 dark:border-dark-600">
+                                                            <img src="${series.cover}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                                                        </div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <h4 class="text-xs font-bold text-slate-800 dark:text-gray-200 truncate group-hover:text-accent-600 dark:group-hover:text-accent-400 transition">${series.title}</h4>
+                                                            <p class="text-[10px] text-slate-500 dark:text-gray-400 mb-1 truncate">${read.chapterTitle}</p>
+                                                            <div class="w-full bg-slate-100 dark:bg-dark-700 rounded-full h-1 mt-1">
+                                                                <div class="bg-accent-500 h-1 rounded-full" style="width: ${read.progress}%"></div>
+                                                            </div>
+                                                        </div>
+                                                        <button class="text-slate-400 dark:text-gray-600 hover:text-accent-500 transition">
+                                                            <i class="fas fa-play-circle text-xl"></i>
+                                                        </button>
+                                                    </div>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    ` : `<p class="text-sm text-slate-400 text-center py-4">Henüz bir şey okumadın.</p>`}
+                                </div>
+
+                                <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 border border-gray-100 dark:border-dark-700 shadow-lg">
+                                    <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-5 flex items-center gap-2">
+                                        <i class="fas fa-fire text-orange-500"></i> En Çok Okunanlar
+                                    </h3>
+                                    <div class="space-y-4">
+                                        ${mostRead.map((item, index) => `
+                                            <div class="flex gap-4 cursor-pointer group items-center" onclick="app.renderDetail(${item.id})">
+                                                <div class="relative w-14 h-18 flex-shrink-0 rounded-xl overflow-hidden shadow-sm">
+                                                    <img src="${item.cover}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                                                    <div class="absolute top-0 left-0 w-6 h-6 bg-accent-500 text-white text-[10px] font-bold flex items-center justify-center rounded-br-xl shadow-sm">${index + 1}</div>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="text-sm font-bold text-slate-800 dark:text-gray-200 truncate group-hover:text-accent-500 transition">${item.title}</h4>
+                                                    <p class="text-[10px] text-slate-500 dark:text-gray-500">${item.genre}</p>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                this.container.innerHTML = html;
+                this.updateHeroDOM();
+            },
+
+            createSeriesCard: function(item) {
+                return `
+                    <div class="group cursor-pointer flex flex-col" onclick="app.renderDetail(${item.id})">
+                        <div class="relative aspect-[2/3] rounded-2xl overflow-hidden mb-4 shadow-md group-hover:shadow-2xl group-hover:shadow-accent-500/20 transition-all duration-300 group-hover:-translate-y-2">
+                            <img src="${item.cover}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-out">
+                            <div class="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                            <div class="absolute bottom-3 right-3 text-yellow-400 text-xs font-bold flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-lg">
+                                <i class="fas fa-star"></i> ${item.rating}
+                            </div>
+                            ${item.status === 'Yeni' ? '<div class="absolute top-3 right-3 bg-blue-500/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">Yeni</div>' : ''}
+                        </div>
+                        <h3 class="font-bold text-slate-900 dark:text-gray-100 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition truncate text-base mb-1">${item.title}</h3>
+                        <p class="text-xs text-slate-500 dark:text-gray-500 font-medium">${item.author}</p>
+                    </div>
+                `;
+            },
+
+            renderFilteredList: function(list) {
+                this.container.innerHTML = `
+                    <div class="max-w-7xl mx-auto px-4 mt-8 fade-in">
+                        <button onclick="app.renderHome()" class="mb-6 text-accent-500 font-bold hover:underline"><i class="fas fa-arrow-left"></i> Ana Sayfaya Dön</button>
+                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Arama Sonuçları (${list.length})</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                            ${list.length > 0 ? list.map(item => this.createSeriesCard(item)).join('') : '<p class="text-slate-500">Sonuç bulunamadı.</p>'}
+                        </div>
+                    </div>
+                `;
+            },
+
+            filterByGenre: function(genre) {
+                this.stopHeroSlider();
+                const filtered = this.series.filter(s => s.genre === genre);
+                this.container.innerHTML = `
+                    <div class="max-w-7xl mx-auto px-4 mt-8 fade-in">
+                        <button onclick="app.renderHome()" class="mb-6 text-accent-500 font-bold hover:underline"><i class="fas fa-arrow-left"></i> Ana Sayfaya Dön</button>
+                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">${genre} Türündeki Seriler</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                            ${filtered.map(item => this.createSeriesCard(item)).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+
+            startHeroSlider: function() {
+                if(this.heroInterval) clearInterval(this.heroInterval);
+                this.heroInterval = setInterval(() => { this.nextHeroSlide(); }, 6000);
+            },
+            stopHeroSlider: function() { if(this.heroInterval) { clearInterval(this.heroInterval); this.heroInterval = null; } },
+            nextHeroSlide: function() {
+                const heroSeriesCount = Math.min(this.series.length, 3);
+                this.heroIndex = (this.heroIndex + 1) % heroSeriesCount;
+                this.updateHeroDOM();
+            },
+            prevHeroSlide: function() {
+                const heroSeriesCount = Math.min(this.series.length, 3);
+                this.heroIndex = (this.heroIndex - 1 + heroSeriesCount) % heroSeriesCount;
+                this.updateHeroDOM();
+                this.startHeroSlider();
+            },
+            updateHeroDOM: function() {
+                const heroContainer = document.getElementById('hero-slider-content');
+                if(!heroContainer) return;
+                const series = this.series[this.heroIndex];
+                
+                heroContainer.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/60 to-transparent z-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent z-10"></div>
+                    <div class="absolute inset-0 slide-enter overflow-hidden">
+                        <img src="${series.banner}" class="w-full h-full object-cover animate-zoom-slow">
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-6 md:p-12 z-20 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-6">
+                        <div class="max-w-2xl animate-float">
+                            <span class="bg-accent-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg mb-4 inline-block">EDİTÖRÜN SEÇİMİ #${this.heroIndex + 1}</span>
+                            <h1 class="text-4xl md:text-7xl font-extrabold text-white mb-4 leading-tight drop-shadow-2xl">${series.title}</h1>
+                            <p class="text-gray-200 line-clamp-2 mb-8 text-sm md:text-lg drop-shadow-md font-medium max-w-lg leading-relaxed">${series.desc}</p>
+                            <button onclick="app.renderDetail(${series.id})" class="bg-white text-dark-900 px-8 py-3.5 rounded-full font-bold hover:bg-gray-100 hover:scale-105 transition-all shadow-xl flex items-center gap-2">
+                                <i class="fas fa-play text-accent-600"></i> <span>Hemen Oku</span>
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="app.prevHeroSlide()" class="w-10 h-10 rounded-full border border-white/20 bg-black/30 text-white flex items-center justify-center hover:bg-white hover:text-black transition"><i class="fas fa-chevron-left"></i></button>
+                            <button onclick="app.nextHeroSlide()" class="w-10 h-10 rounded-full border border-white/20 bg-black/30 text-white flex items-center justify-center hover:bg-white hover:text-black transition"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderDetail: function(id) {
+                this.stopHeroSlider();
+                this.scrollToTop();
+                this.currentDetailId = id;
+                document.getElementById('reader-progress-container').classList.add('hidden');
+                
+                const series = this.series.find(s => s.id === id);
+                if(!series) { this.renderError("Seri Bulunamadı"); return; }
+
+                const similarSeries = this.series.filter(s => s.id !== id).map(s => {
+                    let score = 0;
+                    if(s.genre === series.genre) score += 3;
+                    if(s.author === series.author) score += 2;
+                    return { ...s, score };
+                }).sort((a,b) => b.score - a.score).slice(0, 4);
+
+                let tabContent = '';
+                if(this.detailTab === 'Bölümler') {
+                    tabContent = `
+                        <div class="space-y-3">
+                            ${series.chapters.map(chapter => `
+                                <div class="flex items-center justify-between p-4 bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-700 cursor-pointer hover:shadow-md transition" onclick="app.readChapter(${series.id}, ${chapter.id})">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-16 h-12 bg-gray-200 dark:bg-dark-900 rounded-lg overflow-hidden"><img src="${series.cover}" class="w-full h-full object-cover"></div>
+                                        <div><h4 class="font-bold text-slate-800 dark:text-gray-200">${chapter.title}</h4><span class="text-xs text-slate-400">${chapter.date}</span></div>
+                                    </div>
+                                    <i class="fas fa-play-circle text-2xl text-slate-300 dark:text-dark-600 hover:text-accent-500 transition"></i>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                } else if(this.detailTab === 'Yorumlar') {
+                    tabContent = `<div class="text-center py-10 text-slate-400">Yorumlar özelliği bölüm bazlı çalışmaktadır.</div>`;
+                } else {
+                    tabContent = `<div class="bg-white dark:bg-dark-800 p-6 rounded-2xl border border-gray-100 dark:border-dark-700"><p class="text-slate-600 dark:text-gray-300">${series.desc}</p></div>`;
+                }
+
+                let html = `
+                    <div class="fade-in pb-10">
+                        <div class="relative h-[350px]"><img src="${series.banner}" class="w-full h-full object-cover blur-xl opacity-30"><div class="absolute inset-0 bg-gradient-to-b from-slate-50/60 dark:from-dark-900/40 via-slate-50/90 dark:via-dark-900/80 to-slate-50 dark:to-dark-900"></div></div>
+                        <div class="max-w-4xl mx-auto px-4 -mt-32 relative z-10 flex flex-col md:flex-row gap-8">
+                            <img src="${series.cover}" class="w-48 md:w-64 rounded-2xl shadow-2xl mx-auto md:mx-0">
+                            <div class="flex-1 text-center md:text-left pt-10">
+                                <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">${series.title}</h1>
+                                <p class="text-slate-500 mb-6">${series.author} • ${series.genre}</p>
+                                <button onclick="app.readChapter(${series.id}, ${series.chapters[0].id})" class="bg-accent-600 text-white px-10 py-3 rounded-full font-bold hover:bg-accent-700 shadow-lg transition">Oku</button>
+                            </div>
+                        </div>
+                        <div class="max-w-4xl mx-auto px-4 mt-8">
+                            <div class="flex border-b border-gray-200 dark:border-dark-700 mb-6">
+                                ${['Bölümler', 'Hakkında', 'Yorumlar'].map(tab => `<button onclick="app.switchTab('${tab}')" class="px-6 py-3 text-sm font-bold border-b-2 transition ${this.detailTab === tab ? 'border-accent-500 text-accent-600' : 'border-transparent text-slate-500 hover:text-slate-800'}">${tab}</button>`).join('')}
+                            </div>
+                            ${tabContent}
+                        </div>
+                        <div class="max-w-7xl mx-auto px-4 mt-16 pt-10 border-t border-gray-200 dark:border-dark-700">
+                            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-6">Bunu sevenler bunları da okudu</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                ${similarSeries.map(item => this.createSeriesCard(item)).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+                this.container.innerHTML = html;
+            },
+
+            switchTab: function(tab) { this.detailTab = tab; this.renderDetail(this.currentDetailId); },
+
+            // --- READER FUNCTIONALITY ---
+            getChapterImages: function(chapterId) {
+                return [
+                    "https://images.unsplash.com/photo-1614726365723-49fb4b281f62?w=800&q=80",
+                    "https://images.unsplash.com/photo-1614726365606-f611f5cc24d1?w=800&q=80",
+                    "https://images.unsplash.com/photo-1614726365207-6a45749449f8?w=800&q=80",
+                    "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80"
+                ];
+            },
+
+            readChapter: function(seriesId, chapterId) {
+                this.stopHeroSlider();
+                this.scrollToTop();
+                this.markAsRead(chapterId);
+                document.getElementById('reader-progress-container').classList.remove('hidden');
+
+                const series = this.series.find(s => s.id === seriesId);
+                const chapter = series.chapters.find(c => c.id === chapterId);
+                
+                if(series && chapter) {
+                    this.addToHistory(seriesId, chapterId, chapter.title);
+                }
+
+                // getChapterImages fonksiyonu doğrudan app nesnesi içinden çağrılıyor
+                const images = this.getChapterImages(chapterId); 
+                
+                const likeKey = `likes_${series.id}_${chapter.id}`;
+                const commentKey = `comments_${series.id}_${chapter.id}`;
+                let likes = parseInt(localStorage.getItem(likeKey) || "0");
+                let comments = JSON.parse(localStorage.getItem(commentKey) || "[]");
+
+                let html = `
+                    <div class="bg-slate-100 dark:bg-black min-h-screen">
+                        <div class="sticky top-16 z-30 glass border-b border-gray-200 dark:border-dark-700 px-4 py-3 flex justify-between items-center shadow-lg">
+                            <button onclick="app.renderDetail(${seriesId})" class="text-slate-600 dark:text-gray-300 flex items-center gap-2 font-bold"><i class="fas fa-arrow-left"></i> ${series.title}</button>
+                            <span class="text-sm font-bold text-slate-800 dark:text-white truncate">${chapter.title}</span>
+                            <div class="w-8"></div>
+                        </div>
+                        <div class="max-w-3xl mx-auto flex flex-col items-center bg-white dark:bg-black shadow-2xl">
+                            ${images.map(img => `<img src="${img}" class="w-full h-auto block">`).join('')}
+                            <div class="w-full p-8 bg-slate-50 dark:bg-dark-900 border-t border-gray-200 dark:border-dark-800">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <button onclick="app.likeChapter('${likeKey}')" id="likeBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full transition flex items-center gap-2"><i class="fas fa-heart"></i> Beğen</button>
+                                    <span id="likeCount" class="text-slate-500 dark:text-gray-400">${likes} beğeni</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Yorumlar</h3>
+                                <div class="flex gap-2 mb-4">
+                                    <input id="commentInput" type="text" placeholder="Yorum yaz..." class="flex-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg px-4 py-2 focus:outline-none">
+                                    <button onclick="app.postComment('${commentKey}')" class="bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700">Gönder</button>
+                                </div>
+                                <ul id="commentList" class="space-y-2">
+                                    ${comments.map(c => `<li class="bg-white dark:bg-dark-800 p-3 rounded-lg border border-gray-100 dark:border-dark-700 text-sm text-slate-700 dark:text-gray-300">${c}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>`;
+                this.container.innerHTML = html;
+            },
+
+            likeChapter: function(key) {
+                if(localStorage.getItem(key + '_liked')) { alert("Zaten beğendin!"); return; }
+                let likes = parseInt(localStorage.getItem(key) || "0") + 1;
+                localStorage.setItem(key, likes);
+                localStorage.setItem(key + '_liked', true);
+                document.getElementById('likeCount').textContent = `${likes} beğeni`;
+            },
+
+            postComment: function(key) {
+                const input = document.getElementById('commentInput');
+                if(!input.value.trim()) return;
+                let comments = JSON.parse(localStorage.getItem(key) || "[]");
+                comments.push(input.value.trim());
+                localStorage.setItem(key, JSON.stringify(comments));
+                input.value = '';
+                const list = document.getElementById('commentList');
+                list.innerHTML += `<li class="bg-white dark:bg-dark-800 p-3 rounded-lg border border-gray-100 dark:border-dark-700 text-sm text-slate-700 dark:text-gray-300">${comments[comments.length-1]}</li>`;
+            },
+
+            handleScroll: function() {
+                const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (winScroll / height) * 100;
+                const bar = document.getElementById("reader-progress-bar");
+                if(bar) bar.style.width = scrolled + "%";
+            },
+
+            renderAdmin: function() {
+                this.stopHeroSlider();
+                this.scrollToTop();
+                
+                const totalSeries = this.series.length;
+
+                let html = `
+                    <div class="max-w-4xl mx-auto px-4 mt-8 fade-in">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-3xl font-bold text-slate-800 dark:text-white"><i class="fas fa-user-shield text-accent-500"></i> Yönetim Paneli</h2>
+                            <button onclick="app.logout()" class="text-red-500 font-bold hover:underline">Çıkış Yap</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                            <div class="bg-white dark:bg-dark-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-dark-700 text-center">
+                                <h3 class="text-slate-500 text-sm font-bold uppercase mb-2">Toplam Seri</h3>
+                                <p class="text-3xl font-extrabold text-slate-800 dark:text-white">${totalSeries}</p>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-dark-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-dark-700">
+                            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-6">➕ Yeni Seri Ekle</h3>
+                            <div class="space-y-4">
+                                <input id="newTitle" type="text" placeholder="Seri Adı" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-600 rounded-xl p-3 focus:outline-none">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input id="newAuthor" type="text" placeholder="Yazar" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-600 rounded-xl p-3 focus:outline-none">
+                                    <input id="newGenre" type="text" placeholder="Tür" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-600 rounded-xl p-3 focus:outline-none">
+                                </div>
+                                <input id="newCover" type="text" placeholder="Kapak Görsel URL" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-600 rounded-xl p-3 focus:outline-none">
+                                <textarea id="newDesc" placeholder="Özet" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-600 rounded-xl p-3 focus:outline-none h-32"></textarea>
+                                <div class="flex justify-end pt-4">
+                                    <button onclick="app.addSeries()" class="bg-accent-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-accent-700 shadow-lg">Ekle</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                this.container.innerHTML = html;
+            },
+
+            addSeries: function() {
+                const title = document.getElementById('newTitle').value;
+                const author = document.getElementById('newAuthor').value;
+                const genre = document.getElementById('newGenre').value;
+                const cover = document.getElementById('newCover').value;
+                const desc = document.getElementById('newDesc').value;
+
+                if(!title || !author) return alert("Lütfen gerekli alanları doldurun.");
+
+                const newSeries = {
+                    id: Date.now(),
+                    title, author, genre, cover, desc,
+                    rating: 0, views: 0, status: "Yeni",
+                    chapters: [], comments: [], releaseDay: "Pazartesi"
+                };
+
+                let custom = JSON.parse(localStorage.getItem("customSeries") || "[]");
+                custom.push(newSeries);
+                localStorage.setItem("customSeries", JSON.stringify(custom));
+                
+                this.series.push(newSeries);
+                alert("Seri başarıyla eklendi!");
+                this.renderAdmin();
+            },
+
+            renderLogin: function() {
+                this.stopHeroSlider();
+                this.scrollToTop();
+                this.container.innerHTML = `
+                    <div class="flex items-center justify-center min-h-[80vh] px-4 fade-in">
+                        <div class="w-full max-w-md bg-white dark:bg-dark-800 p-8 rounded-3xl border border-gray-100 dark:border-dark-700 shadow-2xl">
+                            <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-6 text-center">Giriş Yap</h2>
+                            <div class="space-y-5">
+                                <input id="loginUser" type="text" placeholder="Kullanıcı Adı" class="w-full bg-slate-50 dark:bg-dark-900 border border-gray-200 dark:border-dark-600 rounded-xl p-4 focus:outline-none">
+                                <input id="loginPass" type="password" placeholder="Şifre" class="w-full bg-slate-50 dark:bg-dark-900 border border-gray-200 dark:border-dark-600 rounded-xl p-4 focus:outline-none">
+                                <button onclick="app.handleLoginSubmit()" class="w-full bg-accent-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-accent-700 transition">Giriş Yap</button>
+                            </div>
+                            <p class="text-slate-500 text-center mt-6 text-sm">Admin: admin / noctoon123</p>
+                        </div>
+                    </div>`;
+            },
+
+            handleLoginSubmit: function() {
+                const user = document.getElementById('loginUser').value;
+                const pass = document.getElementById('loginPass').value;
+                
+                if(user === 'admin' && pass === 'noctoon123') {
+                    localStorage.setItem("adminLogged", "true");
+                    this.currentUser = "Admin";
+                    this.isAdmin = true;
+                    this.updateNavbar();
+                    this.renderAdmin();
+                } else {
+                    if(user) {
+                        localStorage.setItem("currentUser", user);
+                        this.currentUser = user;
+                        this.isAdmin = false;
+                        this.updateNavbar();
+                        this.renderHome();
+                    } else {
+                        alert("Kullanıcı adı giriniz.");
+                    }
+                }
+            },
+
+            renderError: function(msg) {
+                this.container.innerHTML = `<div class="text-center py-20"><h1 class="text-4xl font-bold mb-4">⚠️ Hata</h1><p class="text-slate-500">${msg}</p><button onclick="app.renderHome()" class="mt-6 text-accent-500 hover:underline">Ana Sayfaya Dön</button></div>`;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
