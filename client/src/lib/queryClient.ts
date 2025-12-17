@@ -29,7 +29,32 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    // Build URL from queryKey array properly
+    // Format: ['/api/series', id] -> '/api/series/id' 
+    // Format: ['/api/series', id, 'chapters'] -> '/api/series/id/chapters'
+    const parts = queryKey.filter(k => k != null && k !== '');
+    let url = parts[0] as string;
+    
+    // Append additional path segments
+    for (let i = 1; i < parts.length; i++) {
+      const segment = String(parts[i]);
+      if (segment && !segment.startsWith('?')) {
+        url = `${url}/${segment}`;
+      }
+    }
+
+    // Add userId query param for user-specific endpoints
+    if (url.includes("/api/user/")) {
+      const userStr = localStorage.getItem("noctoon-user");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          url = `${url}?userId=${user.id}`;
+        } catch {}
+      }
+    }
+
+    const res = await fetch(url, {
       credentials: "include",
     });
 
