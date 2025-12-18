@@ -1,16 +1,10 @@
-// Mock data storage for Vercel deployment
+// JSON tabanlı veri storage - Vercel deployment için
 import type { Series, Chapter, User, Comment, Like, Favorite } from "../src/shared/schema";
 
-// Simple in-memory storage (will reset on each serverless function invocation)
-// For production, you should use a database like Vercel Postgres, MongoDB, etc.
-
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-// Seed data
-const seedSeries: Omit<Series, "id">[] = [
+// JSON verilerini doğrudan burada tanımlıyoruz (Vercel serverless için en güvenilir yöntem)
+const seriesData: Series[] = [
   {
+    id: "series-001",
     title: "Karanlığın Çocuğu",
     description: "Karanlık güçlerle dolu bir dünyada hayatta kalmaya çalışan genç bir kahramanın destansı hikayesi. Gizem, aksiyon ve beklenmedik dönüşlerle dolu.",
     genre: "Aksiyon",
@@ -18,9 +12,10 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "ongoing",
     author: "Yuki Tanaka",
     views: 15420,
-    rating: 92,
+    rating: 92
   },
   {
+    id: "series-002",
     title: "Gümüş Ay Efsanesi",
     description: "Antik bir kehanet, modern dünyada hayat buluyor. Ay ışığının gücünü taşıyan genç bir kadının kaderiyle yüzleşmesi.",
     genre: "Fantastik",
@@ -28,9 +23,10 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "completed",
     author: "Luna Silver",
     views: 28750,
-    rating: 95,
+    rating: 95
   },
   {
+    id: "series-003",
     title: "Yıldız Tozu",
     description: "Uzayın derinliklerinde geçen, aşk ve macera dolu bir bilim kurgu destanı. Galaksiler arası bir yolculuğa hazır olun.",
     genre: "Bilim Kurgu",
@@ -38,9 +34,10 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "new",
     author: "Cosmos Writer",
     views: 5230,
-    rating: 88,
+    rating: 88
   },
   {
+    id: "series-004",
     title: "Demir Şövalye",
     description: "Onur, cesaret ve fedakarlık üzerine kurulu bir ortaçağ hikayesi. Krallığını korumak için savaşan bir şövalyenin destanı.",
     genre: "Tarihi",
@@ -48,9 +45,10 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "ongoing",
     author: "Arthur Knight",
     views: 12890,
-    rating: 90,
+    rating: 90
   },
   {
+    id: "series-005",
     title: "Aşkın Melodisi",
     description: "Müzik dünyasında geçen romantik bir hikaye. İki rakip müzisyenin beklenmedik aşkı.",
     genre: "Romantik",
@@ -58,9 +56,10 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "completed",
     author: "Melody Rose",
     views: 45200,
-    rating: 97,
+    rating: 97
   },
   {
+    id: "series-006",
     title: "Gölgelerin Efendisi",
     description: "Korku ve gerilim dolu bir atmosferde geçen, ürpertici bir gizem hikayesi.",
     genre: "Korku",
@@ -68,9 +67,10 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "new",
     author: "Dark Shadow",
     views: 8900,
-    rating: 85,
+    rating: 85
   },
   {
+    id: "series-007",
     title: "Komedi Kralı",
     description: "Hayatın zorluklarıyla komik bir şekilde başa çıkan bir gencin eğlenceli maceraları.",
     genre: "Komedi",
@@ -78,99 +78,330 @@ const seedSeries: Omit<Series, "id">[] = [
     status: "ongoing",
     author: "Happy Writer",
     views: 22100,
-    rating: 91,
+    rating: 91
   },
   {
+    id: "series-008",
     title: "Kader Oyunu",
     description: "Dramatik dönüşlerle dolu, derin karakterlere sahip etkileyici bir dram.",
     genre: "Dram",
-    cover: "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=400&h=600&fit=crop",
+    cover: "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=600&fit=crop",
     status: "completed",
     author: "Drama Queen",
     views: 31500,
-    rating: 94,
-  },
+    rating: 94
+  }
 ];
 
-// Use global storage to persist data across serverless function invocations
-declare global {
-  var __storage: {
-    users: Map<string, User>;
-    series: Map<string, Series>;
-    chapters: Map<string, Chapter>;
-    comments: Map<string, Comment>;
-    likes: Map<string, Like>;
-    favorites: Map<string, Favorite>;
-  } | undefined;
+const chaptersData: Chapter[] = [
+  // Series 001 - Karanlığın Çocuğu
+  {
+    id: "chapter-001-01",
+    seriesId: "series-001",
+    number: 1,
+    title: "Başlangıç",
+    pages: [
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-001-02",
+    seriesId: "series-001",
+    number: 2,
+    title: "Karanlık Güçler",
+    pages: [
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-001-03",
+    seriesId: "series-001",
+    number: 3,
+    title: "Savaş Başladı",
+    pages: [
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 002 - Gümüş Ay Efsanesi
+  {
+    id: "chapter-002-01",
+    seriesId: "series-002",
+    number: 1,
+    title: "Ay Işığı",
+    pages: [
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-002-02",
+    seriesId: "series-002",
+    number: 2,
+    title: "Kehanet",
+    pages: [
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-002-03",
+    seriesId: "series-002",
+    number: 3,
+    title: "Gümüş Savaşçı",
+    pages: [
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 003 - Yıldız Tozu
+  {
+    id: "chapter-003-01",
+    seriesId: "series-003",
+    number: 1,
+    title: "Uzaya Yolculuk",
+    pages: [
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-003-02",
+    seriesId: "series-003",
+    number: 2,
+    title: "Galaksi Savaşı",
+    pages: [
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 004 - Demir Şövalye
+  {
+    id: "chapter-004-01",
+    seriesId: "series-004",
+    number: 1,
+    title: "Şövalyenin Yemini",
+    pages: [
+      "https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-004-02",
+    seriesId: "series-004",
+    number: 2,
+    title: "Krallık Tehlikede",
+    pages: [
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 005 - Aşkın Melodisi
+  {
+    id: "chapter-005-01",
+    seriesId: "series-005",
+    number: 1,
+    title: "İlk Nota",
+    pages: [
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-005-02",
+    seriesId: "series-005",
+    number: 2,
+    title: "Düet",
+    pages: [
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-005-03",
+    seriesId: "series-005",
+    number: 3,
+    title: "Konser Gecesi",
+    pages: [
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 006 - Gölgelerin Efendisi
+  {
+    id: "chapter-006-01",
+    seriesId: "series-006",
+    number: 1,
+    title: "Karanlık Ev",
+    pages: [
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-006-02",
+    seriesId: "series-006",
+    number: 2,
+    title: "Gölgeler",
+    pages: [
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 007 - Komedi Kralı
+  {
+    id: "chapter-007-01",
+    seriesId: "series-007",
+    number: 1,
+    title: "Komik Başlangıç",
+    pages: [
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-007-02",
+    seriesId: "series-007",
+    number: 2,
+    title: "Gülme Krizi",
+    pages: [
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  // Series 008 - Kader Oyunu
+  {
+    id: "chapter-008-01",
+    seriesId: "series-008",
+    number: 1,
+    title: "Kader Çarkı",
+    pages: [
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-008-02",
+    seriesId: "series-008",
+    number: 2,
+    title: "Son Karar",
+    pages: [
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1509248961925-b5837da318b0?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "chapter-008-03",
+    seriesId: "series-008",
+    number: 3,
+    title: "Final",
+    pages: [
+      "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&h=1200&fit=crop&q=80"
+    ]
+  }
+];
+
+const usersData: User[] = [
+  {
+    id: "user-admin-001",
+    username: "admin",
+    password: "admin123",
+    role: "admin",
+    avatar: null
+  }
+];
+
+// Helper function
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Initialize storage (reuse if exists in global scope)
-const storage = global.__storage || {
-  users: new Map<string, User>(),
-  series: new Map<string, Series>(),
-  chapters: new Map<string, Chapter>(),
-  comments: new Map<string, Comment>(),
-  likes: new Map<string, Like>(),
-  favorites: new Map<string, Favorite>(),
-};
+// Storage objesi - JSON verilerinden başlatılıyor
+interface StorageType {
+  users: Map<string, User>;
+  series: Map<string, Series>;
+  chapters: Map<string, Chapter>;
+  comments: Map<string, Comment>;
+  likes: Map<string, Like>;
+  favorites: Map<string, Favorite>;
+}
+
+// Global storage (Vercel cold start'lar arasında korunmaya çalışılır)
+declare global {
+  var __storage: StorageType | undefined;
+}
+
+function createStorage(): StorageType {
+  const storage: StorageType = {
+    users: new Map(),
+    series: new Map(),
+    chapters: new Map(),
+    comments: new Map(),
+    likes: new Map(),
+    favorites: new Map()
+  };
+
+  // JSON verilerini Map'lere yükle
+  seriesData.forEach(s => storage.series.set(s.id, s));
+  chaptersData.forEach(c => storage.chapters.set(c.id, c));
+  usersData.forEach(u => storage.users.set(u.id, u));
+
+  return storage;
+}
+
+// Storage'ı başlat veya mevcut olanı kullan
+const storage = global.__storage || createStorage();
 
 if (!global.__storage) {
   global.__storage = storage;
 }
 
-// Initialize seed data
-function initData() {
-  // Always ensure admin user exists (check by username, not just count)
-  const users = Array.from(storage.users.values());
-  const adminExists = users.some(u => u.username === "admin" && u.role === "admin");
-  
-  if (!adminExists) {
-    const adminId = generateId();
-    storage.users.set(adminId, {
-      id: adminId,
-      username: "admin",
-      password: "admin123",
-      role: "admin",
-      avatar: null,
-    });
-    console.log("Admin user initialized");
-  }
-
-  // Seed series if storage is empty
+// Veriyi yeniden yükle (cold start durumunda)
+function initializeData() {
+  // Eğer seriler boşsa, yeniden yükle
   if (storage.series.size === 0) {
-    console.log("Seeding series data...");
-    seedSeries.forEach((s) => {
-    const id = generateId();
-    storage.series.set(id, { ...s, id });
+    seriesData.forEach(s => storage.series.set(s.id, s));
+    chaptersData.forEach(c => storage.chapters.set(c.id, c));
+    usersData.forEach(u => storage.users.set(u.id, u));
+    console.log("Data reloaded from JSON");
+  }
 
-    // Add chapters for each series
-    for (let i = 1; i <= 5; i++) {
-      const chapterId = generateId();
-      storage.chapters.set(chapterId, {
-        id: chapterId,
-        seriesId: id,
-        number: i,
-        title: `Bölüm ${i}`,
-        pages: [
-          `https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1200&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&h=1200&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&h=1200&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1531686264889-56fdcabd163f?w=800&h=1200&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80`,
-        ],
-      });
-    });
-    console.log(`Seeded ${storage.series.size} series and ${storage.chapters.size} chapters`);
+  // Admin kullanıcısının var olduğundan emin ol
+  const adminExists = Array.from(storage.users.values()).some(u => u.username === "admin");
+  if (!adminExists) {
+    usersData.forEach(u => storage.users.set(u.id, u));
   }
 }
 
-// Initialize on module load (will be called on first import)
-initData();
-
-// Export initData for manual initialization if needed
-export function initializeData() {
-  initData();
-}
-
-export { storage, generateId };
-
+export { storage, generateId, initializeData };
