@@ -13,7 +13,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Ensure data is initialized (in case of cold start)
   if (storage.series.size === 0) {
-    console.log("Storage empty, initializing data...");
     initializeData();
   }
 
@@ -21,18 +20,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pathArray = (req.query.path as string[]) || [];
   const fullPath = pathArray.length > 0 ? "/api/" + pathArray.join("/") : "/api";
   const pathParts = pathArray.length > 0 ? ["api", ...pathArray] : ["api"];
-  
-  // Debug logging (remove in production)
-  console.log("API Request:", { 
-    method: req.method, 
-    path: fullPath, 
-    pathArray, 
-    pathParts,
-    query: req.query,
-    url: req.url,
-    seriesCount: storage.series.size,
-    usersCount: storage.users.size
-  });
 
   try {
     // AUTH ROUTES
