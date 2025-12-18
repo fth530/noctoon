@@ -120,23 +120,26 @@ if (!global.__storage) {
 
 // Initialize seed data
 function initData() {
-  // Only seed if storage is empty
-  if (storage.series.size > 0) {
-    return;
+  // Always ensure admin user exists (check by username, not just count)
+  const users = Array.from(storage.users.values());
+  const adminExists = users.some(u => u.username === "admin" && u.role === "admin");
+  
+  if (!adminExists) {
+    const adminId = generateId();
+    storage.users.set(adminId, {
+      id: adminId,
+      username: "admin",
+      password: "admin123",
+      role: "admin",
+      avatar: null,
+    });
+    console.log("Admin user initialized");
   }
 
-  // Admin user
-  const adminId = generateId();
-  storage.users.set(adminId, {
-    id: adminId,
-    username: "admin",
-    password: "admin123",
-    role: "admin",
-    avatar: null,
-  });
-
-  // Seed series
-  seedSeries.forEach((s) => {
+  // Seed series if storage is empty
+  if (storage.series.size === 0) {
+    console.log("Seeding series data...");
+    seedSeries.forEach((s) => {
     const id = generateId();
     storage.series.set(id, { ...s, id });
 
@@ -156,8 +159,9 @@ function initData() {
           `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=1200&fit=crop&q=80`,
         ],
       });
-    }
-  });
+    });
+    console.log(`Seeded ${storage.series.size} series and ${storage.chapters.size} chapters`);
+  }
 }
 
 // Initialize on module load (will be called on first import)

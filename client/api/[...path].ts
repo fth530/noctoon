@@ -11,33 +11,96 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // Ensure data is initialized (in case of cold start)
-  if (storage.series.size === 0) {
-    initializeData();
+  // ALWAYS ensure data is initialized (global storage might reset on cold start)
+  initializeData();
+
+  // Parse path from URL (most reliable method)
+  let pathArray: string[] = [];
+  let fullPath = "/api";
+  
+  try {
+    // Method 1: Parse from req.url directly
+    if (req.url) {
+      const urlPath = req.url.split("?")[0]; // Remove query string
+      if (urlPath.startsWith("/api/")) {
+        pathArray = urlPath.slice(5).split("/").filter(Boolean);
+        fullPath = urlPath;
+      } else if (urlPath === "/api") {
+        fullPath = "/api";
+        pathArray = [];
+      }
+    }
+    
+    // Method 2: Fallback to req.query.path (Vercel catch-all format)
+    if (pathArray.length === 0 && req.query.path) {
+      if (Array.isArray(req.query.path)) {
+        pathArray = req.query.path;
+      } else if (typeof req.query.path === "string") {
+        pathArray = [req.query.path];
+      }
+      if (pathArray.length > 0) {
+        fullPath = "/api/" + pathArray.join("/");
+      }
+    }
+  } catch (e) {
+    console.error("Path parsing error:", e);
   }
 
-  // Vercel catch-all route: path comes from req.query.path as an array
-  const pathArray = (req.query.path as string[]) || [];
-  const fullPath = pathArray.length > 0 ? "/api/" + pathArray.join("/") : "/api";
   const pathParts = pathArray.length > 0 ? ["api", ...pathArray] : ["api"];
+  
+  // Debug logging (check Vercel Function Logs)
+  console.log("API Request:", {
+    method: req.method,
+    fullPath,
+    pathArray,
+    pathParts,
+    url: req.url,
+    queryPath: req.query.path,
+    seriesCount: storage.series.size,
+    usersCount: storage.users.size
+  });
 
   try {
     // AUTH ROUTES
-    if (fullPath === "/api/auth/login" && req.method === "POST") {
-      const { username, password } = req.body;
+    if ((fullPath === "/api/auth/login" || pathParts.join("/") === "api/auth/login") && req.method === "POST") {
+      // Ensure admin exists before processing login
+      initializeData();
+      
+      let body = req.body;
+      
+      // Handle body if it's a string (shouldn't happen but just in case)
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch (e) {
+          return res.status(400).json({ error: "Invalid JSON body" });
+        }
+      }
+      
+      const { username, password } = body || {};
 
       if (!username || !password) {
+        console.log("Login failed: Missing credentials", { body: req.body });
         return res.status(400).json({ error: "Username and password required" });
       }
 
       const users = Array.from(storage.users.values());
+      console.log("Login attempt:", { username, availableUsers: users.map(u => u.username) });
+      
       const user = users.find((u) => u.username.toLowerCase() === username.toLowerCase());
 
-      if (!user || user.password !== password) {
+      if (!user) {
+        console.log(`Login failed: User not found - ${username}`);
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      if (user.password !== password) {
+        console.log(`Login failed: Wrong password for user - ${username}`);
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
       const { password: _, ...safeUser } = user;
+      console.log(`Login successful: ${username}, role: ${user.role}, id: ${user.id}`);
       return res.json(safeUser);
     }
 
@@ -70,8 +133,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // SERIES ROUTES
-    if (fullPath === "/api/series" && req.method === "GET") {
+    if ((fullPath === "/api/series" || pathParts.join("/") === "api/series") && req.method === "GET") {
+      // Ensure data is loaded
+      initializeData();
       const series = Array.from(storage.series.values());
+      console.log(`Returning ${series.length} series`);
       return res.json(series);
     }
 
