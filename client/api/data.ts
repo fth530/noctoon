@@ -160,8 +160,13 @@ function initData() {
   });
 }
 
-// Initialize on module load
+// Initialize on module load (will be called on first import)
 initData();
+
+// Export initData for manual initialization if needed
+export function initializeData() {
+  initData();
+}
 
 export { storage, generateId };
 

@@ -1,14 +1,42 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { storage, generateId } from "./data";
+import { storage, generateId, initializeData } from "./data";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const url = new URL(req.url || "", `http://${req.headers.host}`);
-  const path = url.pathname;
-  const pathParts = path.split("/").filter(Boolean);
+  // CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // Ensure data is initialized (in case of cold start)
+  if (storage.series.size === 0) {
+    console.log("Storage empty, initializing data...");
+    initializeData();
+  }
+
+  // Vercel catch-all route: path comes from req.query.path as an array
+  const pathArray = (req.query.path as string[]) || [];
+  const fullPath = pathArray.length > 0 ? "/api/" + pathArray.join("/") : "/api";
+  const pathParts = pathArray.length > 0 ? ["api", ...pathArray] : ["api"];
+  
+  // Debug logging (remove in production)
+  console.log("API Request:", { 
+    method: req.method, 
+    path: fullPath, 
+    pathArray, 
+    pathParts,
+    query: req.query,
+    url: req.url,
+    seriesCount: storage.series.size,
+    usersCount: storage.users.size
+  });
 
   try {
     // AUTH ROUTES
-    if (path === "/api/auth/login" && req.method === "POST") {
+    if (fullPath === "/api/auth/login" && req.method === "POST") {
       const { username, password } = req.body;
 
       if (!username || !password) {
@@ -26,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json(safeUser);
     }
 
-    if (path === "/api/auth/register" && req.method === "POST") {
+    if (fullPath === "/api/auth/register" && req.method === "POST") {
       const { username, password } = req.body;
 
       if (!username || !password) {
@@ -55,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // SERIES ROUTES
-    if (path === "/api/series" && req.method === "GET") {
+    if (fullPath === "/api/series" && req.method === "GET") {
       const series = Array.from(storage.series.values());
       return res.json(series);
     }
