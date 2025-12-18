@@ -1,7 +1,7 @@
 // JSON tabanlı veri storage - Vercel deployment için
 import type { Series, Chapter, User, Comment, Like, Favorite } from "../src/shared/schema";
 
-// JSON verilerini doğrudan burada tanımlıyoruz (Vercel serverless için en güvenilir yöntem)
+// JSON verilerini doğrudan burada tanımlıyoruz
 const seriesData: Series[] = [
   {
     id: "series-001",
@@ -347,58 +347,37 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Storage objesi - JSON verilerinden başlatılıyor
-interface StorageType {
-  users: Map<string, User>;
-  series: Map<string, Series>;
-  chapters: Map<string, Chapter>;
-  comments: Map<string, Comment>;
-  likes: Map<string, Like>;
-  favorites: Map<string, Favorite>;
-}
+// Storage - basit module-level değişkenler (Vercel için daha güvenilir)
+const storage = {
+  users: new Map<string, User>(),
+  series: new Map<string, Series>(),
+  chapters: new Map<string, Chapter>(),
+  comments: new Map<string, Comment>(),
+  likes: new Map<string, Like>(),
+  favorites: new Map<string, Favorite>()
+};
 
-// Global storage (Vercel cold start'lar arasında korunmaya çalışılır)
-declare global {
-  var __storage: StorageType | undefined;
-}
-
-function createStorage(): StorageType {
-  const storage: StorageType = {
-    users: new Map(),
-    series: new Map(),
-    chapters: new Map(),
-    comments: new Map(),
-    likes: new Map(),
-    favorites: new Map()
-  };
-
-  // JSON verilerini Map'lere yükle
+// Başlangıç verilerini yükle
+function loadInitialData() {
   seriesData.forEach(s => storage.series.set(s.id, s));
   chaptersData.forEach(c => storage.chapters.set(c.id, c));
   usersData.forEach(u => storage.users.set(u.id, u));
-
-  return storage;
 }
 
-// Storage'ı başlat veya mevcut olanı kullan
-const storage = global.__storage || createStorage();
-
-if (!global.__storage) {
-  global.__storage = storage;
-}
+// İlk yükleme
+loadInitialData();
 
 // Veriyi yeniden yükle (cold start durumunda)
 function initializeData() {
   // Eğer seriler boşsa, yeniden yükle
   if (storage.series.size === 0) {
-    seriesData.forEach(s => storage.series.set(s.id, s));
-    chaptersData.forEach(c => storage.chapters.set(c.id, c));
-    usersData.forEach(u => storage.users.set(u.id, u));
+    loadInitialData();
     console.log("Data reloaded from JSON");
   }
 
   // Admin kullanıcısının var olduğundan emin ol
-  const adminExists = Array.from(storage.users.values()).some(u => u.username === "admin");
+  const users = Array.from(storage.users.values());
+  const adminExists = users.some((u: User) => u.username === "admin");
   if (!adminExists) {
     usersData.forEach(u => storage.users.set(u.id, u));
   }
