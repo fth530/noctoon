@@ -242,6 +242,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // SINGLE CHAPTER ROUTE
+    if (pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "chapters" && req.method === "GET") {
+      const chapterId = pathParts[2];
+      const chapter = storage.chapters.get(chapterId);
+
+      if (!chapter) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+
+      return res.json(chapter);
+    }
+
     // USER ROUTES
     if (pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "user" && req.method === "GET") {
       const action = pathParts[2];
