@@ -57,7 +57,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         toast({
           title: "Hata",
           description: isRegister
-            ? "Kayıt oluşturulamadı. Bu kullanıcı adı alınmış olabilir."
+            ? "Kayıt oluşturulamadı. Bu kullanıcı adı alınmış olabilir..."
             : "Kullanıcı adı veya şifre hatalı.",
           variant: "destructive",
         });
