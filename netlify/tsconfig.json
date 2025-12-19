@@ -1,0 +1,11 @@
+{
+  "extends": "../Site-Builder/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@shared/*": ["./Site-Builder/shared/*"]
+    }
+  },
+  "include": ["functions/**/*"]
+}
+
