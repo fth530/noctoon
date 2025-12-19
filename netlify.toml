@@ -1,11 +1,12 @@
 [build]
-  command = "cd Site-Builder && npm install && npm run build"
+  command = "cd Site-Builder && npm ci --legacy-peer-deps && npm run build"
   publish = "Site-Builder/dist/public"
   functions = "Site-Builder/netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
   NODE_ENV = "production"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 [functions]
   node_bundler = "esbuild"
