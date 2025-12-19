@@ -1,6 +1,6 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 import express, { type Express, type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "../../Site-Builder/server/routes";
+import { registerRoutes } from "../../server/routes";
 import serverless from "serverless-http";
 
 let app: Express | null = null;
