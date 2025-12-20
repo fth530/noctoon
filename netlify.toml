@@ -1,24 +1,23 @@
 [build]
-  command = "cd Site-Builder && npm install --legacy-peer-deps && npm run build"
-  publish = "Site-Builder/dist/public"
-  functions = "Site-Builder/netlify/functions"
+command = "npm ci --legacy-peer-deps && npm run build"
+publish = "dist/public"
+functions = "netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
-  NPM_FLAGS = "--legacy-peer-deps"
+NODE_VERSION = "20"
+NPM_FLAGS = "--legacy-peer-deps"
 
 [functions]
-  node_bundler = "esbuild"
-  included_files = ["Site-Builder/server/**", "Site-Builder/shared/**"]
+node_bundler = "esbuild"
+included_files = ["server/**", "shared/**"]
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/server/:splat"
-  status = 200
-  force = true
+from = "/api/*"
+to = "/.netlify/functions/server/:splat"
+status = 200
+force = true
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
+from = "/*"
+to = "/index.html"
+status = 200
