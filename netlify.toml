@@ -1,10 +1,12 @@
 [build]
-  command = "npm ci --legacy-peer-deps && npm run build"
+  command = "node --version && npm ci --legacy-peer-deps && npm run build"
   publish = "dist/public"
   functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_CONFIG_TARGET_PLATFORM = "linux"
+  NPM_CONFIG_TARGET_ARCH = "x64"
 
 [functions]
   node_bundler = "esbuild"
