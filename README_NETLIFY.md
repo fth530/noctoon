@@ -46,3 +46,4 @@ netlify dev
 - API çalışmıyorsa, Netlify Functions loglarını kontrol edin
 - CORS hatası alırsanız, `netlify/functions/server.ts` dosyasındaki CORS ayarlarını kontrol edin
 
+
