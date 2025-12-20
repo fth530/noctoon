@@ -1,24 +1,22 @@
 [build]
-  command = "node --version && npm ci --legacy-peer-deps && npm run build"
-  publish = "dist/public"
-  functions = "netlify/functions"
+command = "bash ./build.sh"
+publish = "dist/public"
 
 [build.environment]
-  NODE_VERSION = "20"
-  NPM_CONFIG_TARGET_PLATFORM = "linux"
-  NPM_CONFIG_TARGET_ARCH = "x64"
+NODE_VERSION = "20"
+NPM_FLAGS = "--legacy-peer-deps"
 
 [functions]
-  node_bundler = "esbuild"
-  included_files = ["server/**", "shared/**"]
+node_bundler = "esbuild"
+included_files = ["server/**", "shared/**"]
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/server/:splat"
-  status = 200
-  force = true
+from = "/api/*"
+to = "/.netlify/functions/server/:splat"
+status = 200
+force = true
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200
