@@ -1,0 +1,39 @@
+I am moving my project from a Windows environment to Replit (Linux) to fix persistent Netlify deployment issues. Previously on Vercel, the site deployed with missing functionalities, and I was unable to log in to the Admin account.
+
+Please perform a comprehensive fix, optimization, and push to GitHub.
+
+Follow these strict steps:
+
+1. ENVIRONMENT & DEPENDENCY FIX (CRITICAL):
+   - Since I was on Windows, `package-lock.json` is corrupted with Windows binaries.
+   - Delete `package-lock.json` and `node_modules`.
+   - Run `npm install` to regenerate a fresh, Linux-compatible lockfile.
+   - Explicitly install the missing binary to prevent Netlify errors: `npm install -D @rollup/rollup-linux-x64-gnu`
+
+2. FORCE NODE 20 CONFIGURATION:
+   - Update `package.json`: Ensure `"engines": { "node": ">=20.0.0" }`.
+   - Update/Create `.nvmrc`: Content must be `20`.
+   - Update `netlify.toml`:
+     - Under `[build.environment]`, set `NODE_VERSION = "20"`.
+     - Ensure the `command` handles the install properly: `command = "npm install && npm run build"`
+
+3. FIX MISSING FEATURES & ADMIN ACCESS:
+   - **Admin Issue:** Review the authentication logic (e.g., NextAuth/Auth.js or custom JWT). Ensure the admin login route is correctly defined and not blocked by middleware.
+   - **Database:** If there is a `prisma/seed.ts` or similar seeding script, ensure it runs so the default Admin user actually exists in the database.
+   - **Missing Assets:** Check `vite.config.ts` (or equivalent) to ensure all static assets and routes are included in the build output.
+   - **SPA Redirects:** If this is a Single Page App (React/Vue), ensure `netlify.toml` has the redirect rule to prevent 404s on refresh:
+     ```toml
+     [[redirects]]
+       from = "/*"
+       to = "/index.html"
+       status = 200
+     ```
+
+4. OPTIMIZATION:
+   - Scan the codebase for unused imports or variables and clean them up.
+   - Check for any obvious logic errors that might break the production build.
+
+5. PUSH TO GITHUB:
+   - Stage all changes (especially the new `package-lock.json`).
+   - Commit with message: "fix(replit): repair linux deps, fix admin auth, force node 20".
+   - Push to the `master` (or `main`) branch.

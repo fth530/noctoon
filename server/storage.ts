@@ -236,7 +236,13 @@ export class MemStorage implements IStorage {
 
   async createSeries(insertSeries: InsertSeries): Promise<Series> {
     const id = randomUUID();
-    const series: Series = { ...insertSeries, id };
+    const series: Series = {
+      ...insertSeries,
+      id,
+      status: insertSeries.status || "ongoing",
+      views: insertSeries.views || 0,
+      rating: insertSeries.rating || 0,
+    };
     this.series.set(id, series);
     return series;
   }
@@ -379,7 +385,11 @@ export class MemStorage implements IStorage {
       return updated;
     } else {
       const id = randomUUID();
-      const progress: ReadingProgress = { ...insertProgress, id };
+      const progress: ReadingProgress = {
+        ...insertProgress,
+        id,
+        progress: insertProgress.progress || 0,
+      };
       this.readingProgress.set(id, progress);
       return progress;
     }
