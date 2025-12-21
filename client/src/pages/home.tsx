@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SeriesGrid } from "@/components/series-grid";
+import { PopularMangaSection } from "@/components/popular-manga-section";
 import type { Series } from "@shared/schema";
 import type { SearchFilters } from "@/components/search-modal";
 
@@ -61,6 +62,8 @@ export function HomePage({ searchQuery, filters }: HomePageProps) {
                 />
               </section>
             )}
+
+            <PopularMangaSection />
 
             {popularSeries.length > 0 && (
               <section className="animate-fade-in" style={{ animationDelay: "100ms" }}>

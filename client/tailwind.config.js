@@ -83,6 +83,9 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        gray: {
+          750: "rgb(55 65 81)",
+        },
       },
       fontFamily: {
         sans: ["Outfit", "var(--font-sans)", "sans-serif"],
