@@ -1,0 +1,18 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="24" cy="24" r="22" fill="#2D3748" stroke="#E2E8F0" stroke-width="1"/>
+  
+  <!-- Book pages -->
+  <path d="M12 18 Q16 14 20 18 Q24 14 28 18 Q32 14 36 18 L32 30 Q28 34 24 30 Q20 34 16 30 Q12 34 8 30 Z" fill="#E2E8F0" opacity="0.9"/>
+  
+  <!-- Eye -->
+  <ellipse cx="24" cy="24" rx="10" ry="6" fill="#F7FAFC"/>
+  <circle cx="24" cy="24" r="4" fill="#2D3748"/>
+  <circle cx="25" cy="23" r="1.5" fill="#F7FAFC"/>
+  
+  <!-- Small stars -->
+  <circle cx="12" cy="12" r="1" fill="#F7FAFC" opacity="0.8"/>
+  <circle cx="36" cy="12" r="0.8" fill="#F7FAFC" opacity="0.6"/>
+  <circle cx="10" cy="36" r="0.6" fill="#F7FAFC" opacity="0.7"/>
+  <circle cx="38" cy="36" r="0.5" fill="#F7FAFC" opacity="0.5"/>
+</svg>

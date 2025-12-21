@@ -54,11 +54,12 @@ export function Navbar({
           className="flex items-center gap-3 cursor-pointer group shrink-0"
           data-testid="link-home"
         >
-          <div className="relative w-10 h-10">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary to-pink-500 rounded-xl transform rotate-6 group-hover:rotate-12 transition-all duration-300 blur-sm opacity-70" />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-pink-500 rounded-xl flex items-center justify-center text-white shadow-lg border border-white/20 z-10">
-              <BookOpen className="h-5 w-5" />
-            </div>
+          <div className="relative w-12 h-12">
+            <img 
+              src="/noctoon-logo.svg" 
+              alt="Noctoon Logo" 
+              className="w-12 h-12 object-contain group-hover:scale-105 transition-transform duration-300"
+            />
           </div>
           <div className="flex flex-col justify-center">
             <span className="text-xl font-black tracking-tighter leading-none">
