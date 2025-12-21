@@ -55,20 +55,17 @@ export function Navbar({
           data-testid="link-home"
         >
           <div className="relative w-10 h-10 flex items-center justify-center">
-            {/* Custom CSS Logo */}
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-600 flex items-center justify-center shadow-lg group-hover:shadow-purple-500/25 transition-all duration-300 group-hover:scale-110">
-              {/* Book pages */}
-              <div className="absolute inset-2 rounded-lg bg-gradient-to-br from-white/90 to-gray-100/90 flex items-center justify-center">
-                {/* Owl eye */}
-                <div className="w-4 h-2.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full relative">
-                  <div className="absolute inset-0.5 bg-gray-900 rounded-full">
-                    <div className="absolute top-0.5 left-1 w-1 h-1 bg-white rounded-full"></div>
-                  </div>
-                </div>
+            {/* Crescent Moon Logo */}
+            <div className="relative w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+              {/* Main crescent shape */}
+              <div className="relative w-8 h-8">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-violet-500 to-indigo-600 shadow-lg"></div>
+                <div className="absolute top-1 left-2 w-6 h-6 rounded-full bg-background"></div>
+                {/* Stars around crescent */}
+                <div className="absolute -top-1 right-0 w-1 h-1 bg-yellow-300 rounded-full animate-pulse"></div>
+                <div className="absolute top-2 -right-1 w-0.5 h-0.5 bg-purple-300 rounded-full"></div>
+                <div className="absolute bottom-0 -left-1 w-0.5 h-0.5 bg-blue-300 rounded-full animate-pulse"></div>
               </div>
-              {/* Stars */}
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full opacity-80 animate-pulse"></div>
-              <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-purple-200 rounded-full opacity-60"></div>
             </div>
           </div>
           <div className="flex flex-col justify-center">
