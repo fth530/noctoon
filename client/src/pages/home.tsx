@@ -30,9 +30,6 @@ export function HomePage({ searchQuery, filters }: HomePageProps) {
   });
 
   const newSeries = allSeries.filter((s) => s.status === "new").slice(0, 5);
-  const popularSeries = [...allSeries]
-    .sort((a, b) => (b.views || 0) - (a.views || 0))
-    .slice(0, 5);
 
   const hasActiveFilters =
     searchQuery || filters.genres.length > 0 || filters.status !== "all";
@@ -64,17 +61,6 @@ export function HomePage({ searchQuery, filters }: HomePageProps) {
             )}
 
             <PopularMangaSection />
-
-            {popularSeries.length > 0 && (
-              <section className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-                <SeriesGrid
-                  series={popularSeries}
-                  isLoading={isLoading}
-                  title="En Popüler"
-                  iconType="flame"
-                />
-              </section>
-            )}
 
             <section className="animate-fade-in" style={{ animationDelay: "200ms" }}>
               <SeriesGrid
