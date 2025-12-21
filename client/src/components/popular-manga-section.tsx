@@ -54,7 +54,6 @@ export function PopularMangaSection() {
       </div>
       
       <div className="bg-gray-900 rounded-b-lg overflow-hidden">
-        {/* Filter Tabs */}
         <div className="flex border-b border-gray-700">
           {filters.map((filter) => (
             <button
@@ -72,19 +71,16 @@ export function PopularMangaSection() {
           ))}
         </div>
 
-        {/* Manga List */}
         <div className="p-4 space-y-4">
           {popularMangaData.map((manga) => (
             <div
               key={manga.id}
-              className="flex items-center gap-4 p-3 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors cursor-pointer group"
+              className="flex items-center gap-4 p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer group"
             >
-              {/* Rank */}
               <div className="flex-shrink-0 w-8 h-8 bg-gray-700 rounded border border-gray-600 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-300">{manga.rank}</span>
               </div>
 
-              {/* Manga Cover */}
               <div className="flex-shrink-0 w-16 h-20 rounded overflow-hidden">
                 <img
                   src={manga.image}
@@ -93,7 +89,6 @@ export function PopularMangaSection() {
                 />
               </div>
 
-              {/* Manga Info */}
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-medium text-sm mb-2 line-clamp-2 group-hover:text-emerald-400 transition-colors">
                   {manga.title}
