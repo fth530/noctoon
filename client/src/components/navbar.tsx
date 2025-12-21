@@ -54,11 +54,11 @@ export function Navbar({
           className="flex items-center gap-3 cursor-pointer group shrink-0"
           data-testid="link-home"
         >
-          <div className="relative w-12 h-12">
+          <div className="relative w-10 h-10 flex items-center justify-center">
             <img 
               src="/noctoon-logo.svg" 
               alt="Noctoon Logo" 
-              className="w-12 h-12 object-contain group-hover:scale-105 transition-transform duration-300"
+              className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300"
             />
           </div>
           <div className="flex flex-col justify-center">
