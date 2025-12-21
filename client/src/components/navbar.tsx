@@ -55,11 +55,21 @@ export function Navbar({
           data-testid="link-home"
         >
           <div className="relative w-10 h-10 flex items-center justify-center">
-            <img 
-              src="/noctoon-logo.svg" 
-              alt="Noctoon Logo" 
-              className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300"
-            />
+            {/* Custom CSS Logo */}
+            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-600 flex items-center justify-center shadow-lg group-hover:shadow-purple-500/25 transition-all duration-300 group-hover:scale-110">
+              {/* Book pages */}
+              <div className="absolute inset-2 rounded-lg bg-gradient-to-br from-white/90 to-gray-100/90 flex items-center justify-center">
+                {/* Owl eye */}
+                <div className="w-4 h-2.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full relative">
+                  <div className="absolute inset-0.5 bg-gray-900 rounded-full">
+                    <div className="absolute top-0.5 left-1 w-1 h-1 bg-white rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              {/* Stars */}
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full opacity-80 animate-pulse"></div>
+              <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-purple-200 rounded-full opacity-60"></div>
+            </div>
           </div>
           <div className="flex flex-col justify-center">
             <span className="text-xl font-black tracking-tighter leading-none">
