@@ -1,0 +1,10 @@
+server
+script
+node_modules
+.git
+*.md
+.env*
+dist
+build.sh
+deploy-now.bat
+push-changes.bat
