@@ -1,4 +1,26 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import bcrypt from "bcryptjs";
+
+// HTML entities for XSS protection
+const htmlEntities: Record<string, string> = {
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  "'": '&#x27;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+};
+
+function escapeHtml(text: string): string {
+  if (typeof text !== 'string') return '';
+  return text.replace(/[&<>"'`=\/]/g, (char) => htmlEntities[char] || char);
+}
+
+function sanitizeComment(text: string): string {
+  if (typeof text !== 'string') return '';
+  return escapeHtml(text.trim().substring(0, 2000).replace(/\0/g, ''));
+}
+
+function sanitizeUsername(username: string): string {
+  if (typeof username !== 'string') return '';
+  return username.trim().substring(0, 50).replace(/[^a-zA-Z0-9_-]/g, '');
+}
 
 // ==================== DATA ====================
 
@@ -159,7 +181,8 @@ const chaptersData: Chapter[] = [
 ];
 
 const usersData: User[] = [
-  { id: "user-admin-001", username: "admin", password: "admin123", role: "admin", avatar: null }
+  // Password is 'admin123' hashed with bcrypt (10 salt rounds)
+  { id: "user-admin-001", username: "admin", password: bcrypt.hashSync("admin123", 10), role: "admin", avatar: null }
 ];
 
 function generateId(): string {
@@ -191,9 +214,22 @@ function initializeData() {
 // ==================== HANDLER ====================
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS Configuration - restrict to allowed origins in production
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:5000", "http://localhost:3000"];
+
+  const origin = req.headers.origin as string;
+
+  if (process.env.NODE_ENV !== "production") {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  } else if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-Id");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -241,7 +277,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const users = Array.from(storage.users.values());
       const user = users.find((u: User) => u.username.toLowerCase() === username.toLowerCase());
 
-      if (!user || user.password !== password) {
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      // Use bcrypt to compare passwords securely
+      const isValidPassword = bcrypt.compareSync(password, user.password);
+      if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
@@ -261,8 +303,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(409).json({ error: "Username already exists" });
       }
 
+      // Hash password with bcrypt before storing
       const id = generateId();
-      const user = { id, username, password, role: "user", avatar: null };
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const user = { id, username, password: hashedPassword, role: "user", avatar: null };
       storage.users.set(id, user);
       const { password: _, ...safeUser } = user;
       return res.status(201).json(safeUser);
@@ -306,8 +350,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (!text || !userId || !username) {
             return res.status(400).json({ error: "Missing required fields" });
           }
+          // Sanitize user input to prevent XSS attacks
+          const sanitizedText = sanitizeComment(text);
+          const sanitizedUsername = sanitizeUsername(username);
+          if (!sanitizedText || !sanitizedUsername) {
+            return res.status(400).json({ error: "Invalid input" });
+          }
           const commentId = generateId();
-          const comment = { id: commentId, seriesId, userId, username, text, createdAt: new Date().toLocaleDateString("tr-TR") };
+          const comment = { id: commentId, seriesId, userId, username: sanitizedUsername, text: sanitizedText, createdAt: new Date().toLocaleDateString("tr-TR") };
           storage.comments.set(commentId, comment);
           return res.status(201).json(comment);
         }
@@ -368,6 +418,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ADMIN: STATS
     if (pathParts.length === 3 && pathParts[1] === "admin" && req.method === "GET") {
+      // Verify admin authorization
+      const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const user = storage.users.get(userId) || Array.from(storage.users.values()).find((u: User) => u.id === userId);
+
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
       const action = pathParts[2];
       if (action === "stats") {
         return res.json({

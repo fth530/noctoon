@@ -1,14 +1,38 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { insertUserSchema, insertCommentSchema } from "@shared/schema";
+import { sanitizeComment, sanitizeUsername } from "./sanitize";
+
+// Helper function to verify admin authorization
+async function verifyAdmin(req: Request): Promise<{ isAdmin: boolean; error?: string }> {
+  const authHeader = req.headers.authorization;
+  const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+
+  if (!userId) {
+    return { isAdmin: false, error: "Authentication required" };
+  }
+
+  const user = await storage.getUser(userId);
+
+  if (!user) {
+    return { isAdmin: false, error: "User not found" };
+  }
+
+  if (user.role !== "admin") {
+    return { isAdmin: false, error: "Admin access required" };
+  }
+
+  return { isAdmin: true };
+}
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   // ================== AUTH ROUTES ==================
-  
+
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
@@ -19,7 +43,13 @@ export async function registerRoutes(
 
       const user = await storage.getUserByUsername(username);
 
-      if (!user || user.password !== password) {
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      // Use bcrypt to compare passwords securely
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
@@ -43,7 +73,14 @@ export async function registerRoutes(
         return res.status(409).json({ error: "Username already exists" });
       }
 
-      const user = await storage.createUser(result.data);
+      // Hash password with bcrypt before storing
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(result.data.password, saltRounds);
+
+      const user = await storage.createUser({
+        ...result.data,
+        password: hashedPassword,
+      });
       const { password: _, ...safeUser } = user;
       res.status(201).json(safeUser);
     } catch (error) {
@@ -68,10 +105,10 @@ export async function registerRoutes(
       if (!series) {
         return res.status(404).json({ error: "Series not found" });
       }
-      
+
       // Increment view count
       await storage.incrementViews(req.params.id);
-      
+
       res.json(series);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -120,11 +157,19 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // Sanitize user input to prevent XSS attacks
+      const sanitizedText = sanitizeComment(text);
+      const sanitizedUsername = sanitizeUsername(username);
+
+      if (!sanitizedText || !sanitizedUsername) {
+        return res.status(400).json({ error: "Invalid input" });
+      }
+
       const comment = await storage.createComment({
         seriesId: req.params.id,
         userId,
-        username,
-        text,
+        username: sanitizedUsername,
+        text: sanitizedText,
         createdAt: new Date().toLocaleDateString("tr-TR"),
       });
 
@@ -202,6 +247,13 @@ export async function registerRoutes(
 
   app.get("/api/admin/stats", async (req, res) => {
     try {
+      // Verify admin authorization
+      const authResult = await verifyAdmin(req);
+      if (!authResult.isAdmin) {
+        return res.status(authResult.error === "Authentication required" ? 401 : 403)
+          .json({ error: authResult.error });
+      }
+
       const [series, users, comments, totalLikes, totalFavorites] = await Promise.all([
         storage.getAllSeries(),
         storage.getAllUsers(),
@@ -224,6 +276,13 @@ export async function registerRoutes(
 
   app.get("/api/admin/recent-comments", async (req, res) => {
     try {
+      // Verify admin authorization
+      const authResult = await verifyAdmin(req);
+      if (!authResult.isAdmin) {
+        return res.status(authResult.error === "Authentication required" ? 401 : 403)
+          .json({ error: authResult.error });
+      }
+
       const comments = await storage.getAllComments();
       res.json(comments.slice(0, 20));
     } catch (error) {

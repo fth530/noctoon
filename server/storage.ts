@@ -15,6 +15,7 @@ import {
   type InsertReadingProgress,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // Users
@@ -80,12 +81,14 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed admin user
+    // Seed admin user with hashed password
+    // Default admin password is 'admin123', hashed with bcrypt
     const adminId = randomUUID();
+    const hashedAdminPassword = bcrypt.hashSync("admin123", 10);
     this.users.set(adminId, {
       id: adminId,
       username: "admin",
-      password: "admin123",
+      password: hashedAdminPassword,
       role: "admin",
       avatar: null,
     });
@@ -239,6 +242,8 @@ export class MemStorage implements IStorage {
     const series: Series = {
       ...insertSeries,
       id,
+      description: insertSeries.description ?? null,
+      author: insertSeries.author ?? null,
       status: insertSeries.status || "ongoing",
       views: insertSeries.views || 0,
       rating: insertSeries.rating || 0,

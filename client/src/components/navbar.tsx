@@ -1,32 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/lib/theme";
-import { useAuth } from "@/lib/auth";
-import { 
-  Search, 
-  SlidersHorizontal, 
-  Moon, 
-  Sun, 
-  ChevronDown, 
-  User, 
-  Star, 
-  Shield, 
-  LogOut,
-  LogIn,
+import {
+  Search,
+  SlidersHorizontal,
+  Moon,
+  Sun,
+  Bookmark,
   BookOpen
 } from "lucide-react";
 
 interface NavbarProps {
-  onLoginClick: () => void;
   onSearchClick: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -35,7 +20,6 @@ interface NavbarProps {
 }
 
 export function Navbar({
-  onLoginClick,
   onSearchClick,
   searchQuery,
   onSearchChange,
@@ -43,8 +27,7 @@ export function Navbar({
   isReading = false,
 }: NavbarProps) {
   const { theme, toggleTheme } = useTheme();
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
 
   return (
     <nav className="fixed top-0 w-full z-50 h-16 transition-colors duration-300 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -119,73 +102,15 @@ export function Navbar({
 
           <div className="h-6 w-px bg-border hidden sm:block" />
 
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 rounded-full px-2"
-                  data-testid="button-user-menu"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-pink-500 text-white text-sm font-bold">
-                      {user?.username?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:block font-medium text-sm">
-                    {user?.username}
-                  </span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={() => setLocation("/profile")}
-                  data-testid="menu-item-profile"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Profil
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setLocation("/favorites")}
-                  data-testid="menu-item-favorites"
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Favorilerim
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setLocation("/admin")}
-                      data-testid="menu-item-admin"
-                    >
-                      <Shield className="h-4 w-4 mr-2" />
-                      Admin Paneli
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="text-destructive"
-                  data-testid="menu-item-logout"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Çıkış Yap
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              onClick={onLoginClick}
-              className="bg-gradient-to-r from-primary to-pink-500 text-white rounded-full px-6 font-semibold shadow-lg shadow-primary/30"
-              data-testid="button-login"
-            >
-              <LogIn className="h-4 w-4 mr-2" />
-              Giriş
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation("/bookmarks")}
+            className="rounded-full"
+            data-testid="button-bookmarks"
+          >
+            <Bookmark className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 

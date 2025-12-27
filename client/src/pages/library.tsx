@@ -1,29 +1,36 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SeriesGrid } from "@/components/series-grid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth";
-import { BookOpen, LayoutGrid, Star, Heart, Play, CheckCircle } from "lucide-react";
+import { Bookmark, LayoutGrid, Play, CheckCircle } from "lucide-react";
 import type { Series } from "@shared/schema";
 
+// LocalStorage key for bookmarks
+const BOOKMARKS_KEY = "noctoon-bookmarks";
+
+// Get bookmarks from localStorage
+function getBookmarks(): string[] {
+  try {
+    const stored = localStorage.getItem(BOOKMARKS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function LibraryPage() {
-  const { isAuthenticated } = useAuth();
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+
+  // Load bookmarks on mount
+  useEffect(() => {
+    setBookmarks(getBookmarks());
+  }, []);
 
   const { data: allSeries = [], isLoading } = useQuery<Series[]>({
     queryKey: ["/api/series"],
   });
 
-  const { data: userLikes = [] } = useQuery<string[]>({
-    queryKey: ["/api/user/likes"],
-    enabled: isAuthenticated,
-  });
-
-  const { data: userFavorites = [] } = useQuery<string[]>({
-    queryKey: ["/api/user/favorites"],
-    enabled: isAuthenticated,
-  });
-
-  const favoriteSeries = allSeries.filter((s) => userFavorites.includes(s.id));
-  const likedSeries = allSeries.filter((s) => userLikes.includes(s.id));
+  const bookmarkedSeries = allSeries.filter((s) => bookmarks.includes(s.id));
   const ongoingSeries = allSeries.filter((s) => s.status === "ongoing");
   const completedSeries = allSeries.filter((s) => s.status === "completed");
 
@@ -33,17 +40,25 @@ export function LibraryPage() {
         <div className="mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-white" />
+              <Bookmark className="h-6 w-6 text-white" />
             </div>
             Kütüphane
           </h1>
           <p className="text-muted-foreground mt-2">
-            Tüm serileri keşfedin ve koleksiyonunuzu yönetin.
+            Tüm serileri keşfedin ve yer imleminizi yönetin.
           </p>
         </div>
 
-        <Tabs defaultValue="all" className="animate-fade-in">
+        <Tabs defaultValue="bookmarks" className="animate-fade-in">
           <TabsList className="mb-6 bg-muted/50 p-1 rounded-xl flex-wrap h-auto gap-1">
+            <TabsTrigger
+              value="bookmarks"
+              className="rounded-lg data-[state=active]:bg-background"
+              data-testid="tab-bookmarks"
+            >
+              <Bookmark className="h-4 w-4 mr-2 text-primary" />
+              Yer İmleri ({bookmarkedSeries.length})
+            </TabsTrigger>
             <TabsTrigger
               value="all"
               className="rounded-lg data-[state=active]:bg-background"
@@ -52,26 +67,6 @@ export function LibraryPage() {
               <LayoutGrid className="h-4 w-4 mr-2" />
               Tümü ({allSeries.length})
             </TabsTrigger>
-            {isAuthenticated && (
-              <>
-                <TabsTrigger
-                  value="favorites"
-                  className="rounded-lg data-[state=active]:bg-background"
-                  data-testid="tab-favorites"
-                >
-                  <Star className="h-4 w-4 mr-2 text-yellow-500" />
-                  Favoriler ({favoriteSeries.length})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="liked"
-                  className="rounded-lg data-[state=active]:bg-background"
-                  data-testid="tab-liked"
-                >
-                  <Heart className="h-4 w-4 mr-2 text-red-500" />
-                  Beğeniler ({likedSeries.length})
-                </TabsTrigger>
-              </>
-            )}
             <TabsTrigger
               value="ongoing"
               className="rounded-lg data-[state=active]:bg-background"
@@ -90,6 +85,14 @@ export function LibraryPage() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="bookmarks">
+            <SeriesGrid
+              series={bookmarkedSeries}
+              isLoading={isLoading}
+              emptyMessage="Henüz yer imi eklememişsiniz. Beğendiğiniz serileri yer imlerine ekleyin!"
+            />
+          </TabsContent>
+
           <TabsContent value="all">
             <SeriesGrid
               series={allSeries}
@@ -97,26 +100,6 @@ export function LibraryPage() {
               emptyMessage="Henüz seri eklenmemiş."
             />
           </TabsContent>
-
-          {isAuthenticated && (
-            <>
-              <TabsContent value="favorites">
-                <SeriesGrid
-                  series={favoriteSeries}
-                  isLoading={isLoading}
-                  emptyMessage="Henüz favori eklememişsiniz."
-                />
-              </TabsContent>
-
-              <TabsContent value="liked">
-                <SeriesGrid
-                  series={likedSeries}
-                  isLoading={isLoading}
-                  emptyMessage="Henüz beğeni yapmamışsınız."
-                />
-              </TabsContent>
-            </>
-          )}
 
           <TabsContent value="ongoing">
             <SeriesGrid

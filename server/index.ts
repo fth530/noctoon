@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import rateLimit from "express-rate-limit";
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,6 +12,54 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+// CORS Configuration - restrict to allowed origins in production
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:5000", "http://localhost:3000"];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  // In development, allow all origins
+  if (process.env.NODE_ENV !== "production") {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+  } else if (origin && allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-Id");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Rate limiting for API endpoints - 100 requests per 15 minutes per IP
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  message: { error: "Too many requests, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.path.startsWith("/api"), // Only rate limit API routes
+});
+
+// Stricter rate limiting for auth endpoints - 10 requests per 15 minutes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many authentication attempts, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiters
+app.use("/api/auth", authLimiter);
+app.use("/api", apiLimiter);
 
 app.use(
   express.json({

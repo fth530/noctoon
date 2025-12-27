@@ -19,12 +19,25 @@ async function createApp(): Promise<Express> {
 
   expressApp.use(express.urlencoded({ extended: false }));
 
-  // CORS middleware
+  // CORS middleware - restrict to allowed origins in production
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:5000", "http://localhost:3000"];
+
   expressApp.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
+    const origin = req.headers.origin as string;
+
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== "production") {
+      res.header("Access-Control-Allow-Origin", origin || "*");
+    } else if (origin && allowedOrigins.includes(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+    }
+
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-Id");
+    res.header("Access-Control-Allow-Credentials", "true");
+
     if (req.method === "OPTIONS") {
       return res.status(200).end();
     }

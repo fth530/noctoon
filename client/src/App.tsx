@@ -5,23 +5,18 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme";
-import { AuthProvider } from "@/lib/auth";
 import { SplashScreen } from "@/components/splash-screen";
 import { Navbar } from "@/components/navbar";
 import { MobileNav } from "@/components/mobile-nav";
-import { LoginModal } from "@/components/login-modal";
 import { SearchModal, type SearchFilters } from "@/components/search-modal";
 import { HomePage } from "@/pages/home";
 import { SeriesDetailPage } from "@/pages/series-detail";
 import { ReaderPage } from "@/pages/reader";
-import { ProfilePage } from "@/pages/profile";
-import { AdminPage } from "@/pages/admin";
 import { LibraryPage } from "@/pages/library";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({
@@ -46,7 +41,6 @@ function AppContent() {
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
 
       <Navbar
-        onLoginClick={() => setShowLoginModal(true)}
         onSearchClick={() => setShowSearchModal(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -55,11 +49,6 @@ function AppContent() {
       />
 
       <MobileNav onSearchClick={() => setShowSearchModal(true)} />
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
 
       <SearchModal
         isOpen={showSearchModal}
@@ -85,10 +74,8 @@ function AppContent() {
             />
           )}
         </Route>
-        <Route path="/profile" component={ProfilePage} />
-        <Route path="/favorites" component={ProfilePage} />
-        <Route path="/admin" component={AdminPage} />
         <Route path="/library" component={LibraryPage} />
+        <Route path="/bookmarks" component={LibraryPage} />
         <Route component={NotFound} />
       </Switch>
 
@@ -101,11 +88,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <AppContent />
-          </TooltipProvider>
-        </AuthProvider>
+        <TooltipProvider>
+          <AppContent />
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
