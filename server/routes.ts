@@ -189,8 +189,8 @@ export async function registerRoutes(
         return res.status(400).json({ error: "User ID required" });
       }
 
-      const liked = await storage.toggleLike(req.params.id, userId);
-      res.json({ liked });
+      await storage.toggleLike({ seriesId: req.params.id, userId });
+      res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
@@ -205,7 +205,7 @@ export async function registerRoutes(
       }
 
       const likes = await storage.getLikesByUserId(userId);
-      res.json(likes.map((l) => l.seriesId));
+      res.json(likes); // Already returns string[] of seriesIds
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
@@ -221,8 +221,8 @@ export async function registerRoutes(
         return res.status(400).json({ error: "User ID required" });
       }
 
-      const favorited = await storage.toggleFavorite(req.params.id, userId);
-      res.json({ favorited });
+      await storage.toggleFavorite({ seriesId: req.params.id, userId });
+      res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
@@ -237,7 +237,7 @@ export async function registerRoutes(
       }
 
       const favorites = await storage.getFavoritesByUserId(userId);
-      res.json(favorites.map((f) => f.seriesId));
+      res.json(favorites); // Already returns string[] of seriesIds
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
