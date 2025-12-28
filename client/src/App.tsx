@@ -13,6 +13,7 @@ import { HomePage } from "@/pages/home";
 import { SeriesDetailPage } from "@/pages/series-detail";
 import { ReaderPage } from "@/pages/reader";
 import { LibraryPage } from "@/pages/library";
+import { AdminPage } from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -76,6 +77,7 @@ function AppContent() {
         </Route>
         <Route path="/library" component={LibraryPage} />
         <Route path="/bookmarks" component={LibraryPage} />
+        <Route path="/noctoon-yonetim-x9k7" component={AdminPage} />
         <Route component={NotFound} />
       </Switch>
 
