@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SeriesCard } from "@/components/series-card";
 import { useToast } from "@/hooks/use-toast";
+import { getReadingProgress, type ReadingProgress } from "@/lib/reading-progress";
 import {
   ArrowLeft,
   Home,
@@ -17,7 +18,8 @@ import {
   Bookmark,
   List,
   ChevronRight,
-  Layers
+  Layers,
+  PlayCircle
 } from "lucide-react";
 import type { Series, Chapter } from "@shared/schema";
 
@@ -52,6 +54,12 @@ export function SeriesDetailPage({ id }: SeriesDetailPageProps) {
   useEffect(() => {
     const bookmarks = getBookmarks();
     setIsBookmarked(bookmarks.includes(id));
+  }, [id]);
+
+  // Get reading progress
+  const [readingProgress, setReadingProgress] = useState<ReadingProgress | null>(null);
+  useEffect(() => {
+    setReadingProgress(getReadingProgress(id));
   }, [id]);
 
   const { data: series, isLoading: seriesLoading } = useQuery<Series>({
@@ -191,6 +199,17 @@ export function SeriesDetailPage({ id }: SeriesDetailPageProps) {
             )}
 
             <div className="flex flex-wrap gap-3">
+              {readingProgress && (
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30"
+                  onClick={() => setLocation(`/read/${id}/${readingProgress.chapterId}`)}
+                  data-testid="button-continue"
+                >
+                  <PlayCircle className="h-5 w-5 mr-2" />
+                  Devam Et (Bölüm {readingProgress.chapterNumber})
+                </Button>
+              )}
               {chapters.length > 0 && (
                 <Button
                   size="lg"

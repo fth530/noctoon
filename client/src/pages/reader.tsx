@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { saveReadingProgress } from "@/lib/reading-progress";
 import { X, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, List, Home } from "lucide-react";
 import type { Series, Chapter } from "@shared/schema";
 
@@ -48,13 +49,18 @@ export function ReaderPage({
   useEffect(() => {
     onReadingStateChange(true);
     window.addEventListener("scroll", handleScroll);
-    
+
+    // Save reading progress when chapter is loaded
+    if (chapter && seriesId) {
+      saveReadingProgress(seriesId, chapterId, chapter.number, chapter.title);
+    }
+
     return () => {
       onReadingStateChange(false);
       onProgressChange(0);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [handleScroll, onProgressChange, onReadingStateChange]);
+  }, [handleScroll, onProgressChange, onReadingStateChange, chapter, seriesId, chapterId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -118,9 +124,8 @@ export function ReaderPage({
   return (
     <div className="min-h-screen bg-black">
       <div
-        className={`fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50 transition-all duration-300 ${
-          isControlsVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50 transition-all duration-300 ${isControlsVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -182,9 +187,8 @@ export function ReaderPage({
       </div>
 
       <div
-        className={`fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50 transition-all duration-300 ${
-          isControlsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"
-        }`}
+        className={`fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50 transition-all duration-300 ${isControlsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Button
