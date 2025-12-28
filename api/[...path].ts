@@ -451,6 +451,103 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // ADMIN: CREATE SERIES
+    if ((fullPath === "/api/admin/series" || pathParts.join("/") === "api/admin/series") && req.method === "POST") {
+      const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+      if (!userId) return res.status(401).json({ error: "Authentication required" });
+
+      const user = storage.users.get(userId) || Array.from(storage.users.values()).find((u: User) => u.id === userId);
+      if (!user || user.role !== "admin") return res.status(403).json({ error: "Admin access required" });
+
+      const { title, description, genre, cover, author, status } = req.body;
+      if (!title || !genre || !cover) {
+        return res.status(400).json({ error: "Title, genre, and cover are required" });
+      }
+
+      const id = generateId();
+      const newSeries: Series = {
+        id,
+        title: escapeHtml(title),
+        description: description ? escapeHtml(description) : null,
+        genre: escapeHtml(genre),
+        cover,
+        author: author ? escapeHtml(author) : null,
+        status: status || "ongoing",
+        views: 0,
+        rating: 85
+      };
+      storage.series.set(id, newSeries);
+      return res.status(201).json(newSeries);
+    }
+
+    // ADMIN: DELETE SERIES
+    if (pathParts.length === 4 && pathParts[1] === "admin" && pathParts[2] === "series" && req.method === "DELETE") {
+      const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+      if (!userId) return res.status(401).json({ error: "Authentication required" });
+
+      const user = storage.users.get(userId) || Array.from(storage.users.values()).find((u: User) => u.id === userId);
+      if (!user || user.role !== "admin") return res.status(403).json({ error: "Admin access required" });
+
+      const seriesId = pathParts[3];
+      if (!storage.series.has(seriesId)) {
+        return res.status(404).json({ error: "Series not found" });
+      }
+
+      // Delete series and its chapters
+      storage.series.delete(seriesId);
+      Array.from(storage.chapters.entries()).forEach(([chapterId, chapter]) => {
+        if (chapter.seriesId === seriesId) storage.chapters.delete(chapterId);
+      });
+      return res.json({ success: true });
+    }
+
+    // ADMIN: ADD CHAPTER TO SERIES
+    if (pathParts.length === 5 && pathParts[1] === "admin" && pathParts[2] === "series" && pathParts[4] === "chapters" && req.method === "POST") {
+      const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+      if (!userId) return res.status(401).json({ error: "Authentication required" });
+
+      const user = storage.users.get(userId) || Array.from(storage.users.values()).find((u: User) => u.id === userId);
+      if (!user || user.role !== "admin") return res.status(403).json({ error: "Admin access required" });
+
+      const seriesId = pathParts[3];
+      if (!storage.series.has(seriesId)) {
+        return res.status(404).json({ error: "Series not found" });
+      }
+
+      const { number, title, pages } = req.body;
+      if (!number || !title || !pages || !Array.isArray(pages)) {
+        return res.status(400).json({ error: "Number, title, and pages array are required" });
+      }
+
+      const id = generateId();
+      const newChapter: Chapter = {
+        id,
+        seriesId,
+        number: parseInt(number),
+        title: escapeHtml(title),
+        pages
+      };
+      storage.chapters.set(id, newChapter);
+      return res.status(201).json(newChapter);
+    }
+
+    // ADMIN: DELETE CHAPTER
+    if (pathParts.length === 4 && pathParts[1] === "admin" && pathParts[2] === "chapters" && req.method === "DELETE") {
+      const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+      if (!userId) return res.status(401).json({ error: "Authentication required" });
+
+      const user = storage.users.get(userId) || Array.from(storage.users.values()).find((u: User) => u.id === userId);
+      if (!user || user.role !== "admin") return res.status(403).json({ error: "Admin access required" });
+
+      const chapterId = pathParts[3];
+      if (!storage.chapters.has(chapterId)) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+
+      storage.chapters.delete(chapterId);
+      return res.json({ success: true });
+    }
+
     return res.status(404).json({ error: "Not found" });
   } catch (error) {
     console.error("API Error:", error);

@@ -1,23 +1,28 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
-import { 
-  Shield, 
-  Lock, 
-  Home, 
-  BookOpen, 
-  Users, 
-  MessageSquare, 
-  Heart, 
-  Star, 
+import { AddSeriesModal } from "@/components/add-series-modal";
+import { AddChapterModal } from "@/components/add-chapter-modal";
+import {
+  Shield,
+  Lock,
+  Home,
+  BookOpen,
+  Users,
+  MessageSquare,
+  Heart,
+  Star,
   Eye,
   PlusCircle,
   UserCog,
   MessageCircle,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  Trash2,
+  Plus
 } from "lucide-react";
 import type { Series, Comment } from "@shared/schema";
 
@@ -32,6 +37,11 @@ interface AdminStats {
 export function AdminPage() {
   const [, setLocation] = useLocation();
   const { isAdmin, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  const [showAddSeriesModal, setShowAddSeriesModal] = useState(false);
+  const [showAddChapterModal, setShowAddChapterModal] = useState(false);
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
 
   const { data: stats } = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
@@ -47,6 +57,36 @@ export function AdminPage() {
     queryKey: ["/api/admin/recent-comments"],
     enabled: isAdmin,
   });
+
+  const deleteSeriesMutation = useMutation({
+    mutationFn: async (seriesId: string) => {
+      const userStr = localStorage.getItem("noctoon-user");
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      const response = await fetch(`/api/admin/series/${seriesId}`, {
+        method: "DELETE",
+        headers: { "x-user-id": user?.id || "" }
+      });
+
+      if (!response.ok) throw new Error("Failed to delete series");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    }
+  });
+
+  const handleDeleteSeries = (s: Series) => {
+    if (confirm(`"${s.title}" serisini silmek istediğinize emin misiniz?`)) {
+      deleteSeriesMutation.mutate(s.id);
+    }
+  };
+
+  const handleAddChapter = (s: Series) => {
+    setSelectedSeries(s);
+    setShowAddChapterModal(true);
+  };
 
   if (!isAuthenticated || !isAdmin) {
     return (
@@ -172,8 +212,25 @@ export function AdminPage() {
                       size="icon"
                       onClick={() => setLocation(`/series/${s.id}`)}
                       data-testid={`button-view-series-${s.id}`}
+                      title="Görüntüle"
                     >
                       <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleAddChapter(s)}
+                      title="Bölüm Ekle"
+                    >
+                      <Plus className="h-4 w-4 text-green-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteSeries(s)}
+                      title="Sil"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 ))}
@@ -234,6 +291,7 @@ export function AdminPage() {
                 variant="outline"
                 className="h-auto py-6 flex flex-col gap-2"
                 data-testid="button-add-series"
+                onClick={() => setShowAddSeriesModal(true)}
               >
                 <PlusCircle className="h-8 w-8 text-primary" />
                 <span>Yeni Seri Ekle</span>
@@ -266,6 +324,20 @@ export function AdminPage() {
           </CardContent>
         </Card>
       </div>
+
+      <AddSeriesModal
+        open={showAddSeriesModal}
+        onOpenChange={setShowAddSeriesModal}
+      />
+
+      {selectedSeries && (
+        <AddChapterModal
+          open={showAddChapterModal}
+          onOpenChange={setShowAddChapterModal}
+          seriesId={selectedSeries.id}
+          seriesTitle={selectedSeries.title}
+        />
+      )}
     </div>
   );
 }
