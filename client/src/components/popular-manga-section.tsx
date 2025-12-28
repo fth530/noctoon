@@ -49,7 +49,7 @@ export function PopularMangaSection() {
 
   return (
     <section className="animate-fade-in" style={{ animationDelay: "150ms" }}>
-      <div className="bg-gradient-to-r from-primary/20 to-cyan-900/30 rounded-t-lg p-4 border-b border-primary/30">
+      <div className="bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-t-lg p-4">
         <h2 className="text-xl font-bold text-white">Popüler Mangalar</h2>
       </div>
 
@@ -62,7 +62,7 @@ export function PopularMangaSection() {
               className={cn(
                 "px-6 py-3 text-sm font-medium transition-colors",
                 activeFilter === filter
-                  ? "bg-primary/20 text-primary border-b-2 border-primary"
+                  ? "bg-fuchsia-600 text-white"
                   : "text-gray-400 hover:text-white hover:bg-gray-800"
               )}
             >
@@ -90,7 +90,7 @@ export function PopularMangaSection() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <h3 className="text-white font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                <h3 className="text-white font-medium text-sm mb-2 line-clamp-2 group-hover:text-fuchsia-400 transition-colors">
                   {manga.title}
                 </h3>
                 <div className="flex flex-wrap gap-1">
