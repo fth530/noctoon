@@ -14,6 +14,8 @@ import { SeriesDetailPage } from "@/pages/series-detail";
 import { ReaderPage } from "@/pages/reader";
 import { LibraryPage } from "@/pages/library";
 import { AdminPage } from "@/pages/admin";
+import { LoginPage } from "@/pages/login";
+import { AuthProvider } from "@/lib/auth";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -77,6 +79,7 @@ function AppContent() {
         </Route>
         <Route path="/library" component={LibraryPage} />
         <Route path="/bookmarks" component={LibraryPage} />
+        <Route path="/login" component={LoginPage} />
         <Route path="/noctoon-yonetim-x9k7" component={AdminPage} />
         <Route component={NotFound} />
       </Switch>
@@ -89,11 +92,13 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <AppContent />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <AppContent />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
