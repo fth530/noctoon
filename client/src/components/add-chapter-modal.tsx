@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { uploadToCloudinary } from "@/lib/upload";
+import { Loader2, Plus, Trash2, Upload, CloudUpload } from "lucide-react";
 
 interface AddChapterModalProps {
     open: boolean;
@@ -70,10 +71,46 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
         setFormData({ ...formData, pages: newPages.length > 0 ? newPages : [""] });
     };
 
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
     const updatePage = (index: number, value: string) => {
         const newPages = [...formData.pages];
         newPages[index] = value;
         setFormData({ ...formData, pages: newPages });
+    };
+
+    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setIsUploading(true);
+        setUploadProgress(0);
+        const uploadedUrls: string[] = [];
+        const totalFiles = files.length;
+
+        try {
+            for (let i = 0; i < totalFiles; i++) {
+                const url = await uploadToCloudinary(files[i]);
+                uploadedUrls.push(url);
+                setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+            }
+
+            // Add uploaded URLs to pages, filtering out empty initial page if exists
+            setFormData(prev => {
+                const currentPages = prev.pages.filter(p => p.trim() !== "");
+                return {
+                    ...prev,
+                    pages: [...currentPages, ...uploadedUrls]
+                };
+            });
+        } catch (error) {
+            console.error(error);
+            alert("Bazı dosyalar yüklenirken hata oluştu!");
+        } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+        }
     };
 
     return (
@@ -111,10 +148,39 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label>Sayfa URL'leri *</Label>
-                            <Button type="button" variant="outline" size="sm" onClick={addPage}>
-                                <Plus className="h-4 w-4 mr-1" />
-                                Sayfa Ekle
-                            </Button>
+                            <div className="flex gap-2">
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        id="bulk-upload"
+                                        className="hidden"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleBulkUpload}
+                                        disabled={isUploading}
+                                    />
+                                    <Label
+                                        htmlFor="bulk-upload"
+                                        className={`flex items-center justify-center h-8 px-3 text-xs bg-green-600 text-white rounded-md cursor-pointer hover:bg-green-700 transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {isUploading ? (
+                                            <>
+                                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                                %{uploadProgress}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CloudUpload className="h-3 w-3 mr-1" />
+                                                Toplu Yükle
+                                            </>
+                                        )}
+                                    </Label>
+                                </div>
+                                <Button type="button" variant="outline" size="sm" onClick={addPage} disabled={isUploading}>
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    URL Ekle
+                                </Button>
+                            </div>
                         </div>
 
                         <div className="space-y-2 max-h-60 overflow-y-auto">
