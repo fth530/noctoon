@@ -1,51 +1,73 @@
 <!DOCTYPE html>
 <html lang="tr" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    
-    <!-- Primary Meta Tags -->
-    <title>Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu</title>
-    <meta name="title" content="Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu" />
-    <meta name="description" content="En popüler webtoon ve manga serilerini ücretsiz oku. Aksiyon, romantik, fantastik ve daha fazla türde binlerce bölüm." />
-    <meta name="keywords" content="webtoon, manga, manhwa, ücretsiz manga, türkçe webtoon, online manga oku, manhwa oku" />
-    <meta name="author" content="Noctoon" />
-    <meta name="robots" content="index, follow" />
-    <meta name="language" content="Turkish" />
-    
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#0f172a" />
-    <meta name="msapplication-TileColor" content="#0f172a" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://noctoon-psi.vercel.app/" />
-    <meta property="og:title" content="Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu" />
-    <meta property="og:description" content="En popüler webtoon ve manga serilerini ücretsiz oku. Aksiyon, romantik, fantastik türlerde binlerce bölüm." />
-    <meta property="og:image" content="https://noctoon-psi.vercel.app/og-image.png" />
-    <meta property="og:locale" content="tr_TR" />
-    <meta property="og:site_name" content="Noctoon" />
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://noctoon-psi.vercel.app/" />
-    <meta name="twitter:title" content="Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu" />
-    <meta name="twitter:description" content="En popüler webtoon ve manga serilerini ücretsiz oku." />
-    <meta name="twitter:image" content="https://noctoon-psi.vercel.app/og-image.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- Primary Meta Tags -->
+  <title>Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu</title>
+  <meta name="title" content="Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu" />
+  <meta name="description"
+    content="En popüler webtoon ve manga serilerini ücretsiz oku. Aksiyon, romantik, fantastik ve daha fazla türde binlerce bölüm." />
+  <meta name="keywords"
+    content="webtoon, manga, manhwa, ücretsiz manga, türkçe webtoon, online manga oku, manhwa oku" />
+  <meta name="author" content="Noctoon" />
+  <meta name="robots" content="index, follow" />
+  <meta name="language" content="Turkish" />
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="msapplication-TileColor" content="#0f172a" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://noctoon-psi.vercel.app/" />
+  <meta property="og:title" content="Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu" />
+  <meta property="og:description"
+    content="En popüler webtoon ve manga serilerini ücretsiz oku. Aksiyon, romantik, fantastik türlerde binlerce bölüm." />
+  <meta property="og:image" content="https://noctoon-psi.vercel.app/og-image.png" />
+  <meta property="og:locale" content="tr_TR" />
+  <meta property="og:site_name" content="Noctoon" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://noctoon-psi.vercel.app/" />
+  <meta name="twitter:title" content="Noctoon - Ücretsiz Webtoon & Manga Okuma Platformu" />
+  <meta name="twitter:description" content="En popüler webtoon ve manga serilerini ücretsiz oku." />
+  <meta name="twitter:image" content="https://noctoon-psi.vercel.app/og-image.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Manifest -->
+  <link rel="manifest" href="/manifest.json">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('SW registered:', registration);
+          })
+          .catch(error => {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
 </html>
