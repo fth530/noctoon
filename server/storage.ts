@@ -290,6 +290,7 @@ class DatabaseStorage implements IStorage {
     const chapter: Chapter = {
       ...insertChapter,
       id,
+      publishAt: insertChapter.publishAt ?? null,
     };
     await db.insert(chapters).values(chapter);
     return chapter;

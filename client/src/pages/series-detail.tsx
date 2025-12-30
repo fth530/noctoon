@@ -7,6 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SeriesCard } from "@/components/series-card";
 import { useToast } from "@/hooks/use-toast";
+import { AddChapterModal } from "@/components/add-chapter-modal";
+import { EditSeriesModal } from "@/components/edit-series-modal";
+import { BulkChapterUploadModal } from "@/components/bulk-chapter-upload-modal";
+import { useAuth } from "@/lib/auth";
 import { getReadingProgress, type ReadingProgress } from "@/lib/reading-progress";
 import {
   ArrowLeft,
@@ -19,7 +23,8 @@ import {
   List,
   ChevronRight,
   Layers,
-  PlayCircle
+  PlayCircle,
+  Plus
 } from "lucide-react";
 import type { Series, Chapter } from "@shared/schema";
 
@@ -48,7 +53,11 @@ interface SeriesDetailPageProps {
 export function SeriesDetailPage({ id }: SeriesDetailPageProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showAddChapterModal, setShowAddChapterModal] = useState(false);
+  const [showEditSeriesModal, setShowEditSeriesModal] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
 
   // Check bookmark status on mount
   useEffect(() => {
@@ -230,9 +239,46 @@ export function SeriesDetailPage({ id }: SeriesDetailPageProps) {
                 <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? "fill-current" : ""}`} />
                 {isBookmarked ? "Yer İminde" : "Yer İmlerine Ekle"}
               </Button>
+
+              {user?.role === "admin" && (
+                <>
+                  <Button variant="outline" onClick={() => setShowEditSeriesModal(true)}>
+                    <Pen className="h-4 w-4 mr-2" />
+                    Düzenle
+                  </Button>
+                  <Button onClick={() => setShowAddChapterModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Bölüm Ekle
+                  </Button>
+                  <Button variant="secondary" onClick={() => setShowBulkUploadModal(true)}>
+                    <Layers className="h-4 w-4 mr-2" />
+                    Toplu Bölüm Yükle
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
+
+        <AddChapterModal
+          open={showAddChapterModal}
+          onOpenChange={setShowAddChapterModal}
+          seriesId={id}
+          seriesTitle={series.title}
+        />
+
+        <EditSeriesModal
+          open={showEditSeriesModal}
+          onOpenChange={setShowEditSeriesModal}
+          series={series}
+        />
+
+        <BulkChapterUploadModal
+          open={showBulkUploadModal}
+          onOpenChange={setShowBulkUploadModal}
+          seriesId={id}
+          seriesTitle={series.title}
+        />
 
         {chapters.length > 0 && (
           <Card className="mt-10 animate-fade-in" style={{ animationDelay: "100ms" }}>

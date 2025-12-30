@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadToCloudinary } from "@/lib/upload";
-import { Loader2, Plus, Trash2, Upload, CloudUpload } from "lucide-react";
+import { Loader2, Plus, Trash2, Upload, CloudUpload, FileArchive } from "lucide-react";
+import JSZip from "jszip";
 
 interface AddChapterModalProps {
     open: boolean;
@@ -19,7 +20,8 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
     const [formData, setFormData] = useState({
         number: 1,
         title: "",
-        pages: [""]
+        pages: [""] as string[],
+        publishAt: "" as string
     });
 
     const mutation = useMutation({
@@ -35,7 +37,8 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
                 },
                 body: JSON.stringify({
                     ...data,
-                    pages: data.pages.filter(p => p.trim() !== "")
+                    pages: data.pages.filter(p => p.trim() !== ""),
+                    publishAt: data.publishAt ? new Date(data.publishAt).toISOString() : null
                 })
             });
 
@@ -48,7 +51,7 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/series", seriesId, "chapters"] });
             onOpenChange(false);
-            setFormData({ number: 1, title: "", pages: [""] });
+            setFormData({ number: 1, title: "", pages: [""], publishAt: "" });
         }
     });
 
@@ -87,16 +90,50 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
         setIsUploading(true);
         setUploadProgress(0);
         const uploadedUrls: string[] = [];
-        const totalFiles = files.length;
 
         try {
-            for (let i = 0; i < totalFiles; i++) {
-                const url = await uploadToCloudinary(files[i]);
-                uploadedUrls.push(url);
-                setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+            // Handle ZIP file
+            if (files[0].name.endsWith('.zip')) {
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(files[0]);
+                const imageFiles: { name: string, data: Blob }[] = [];
+
+                // Extract images from zip
+                for (const [relativePath, zipEntry] of Object.entries(zipContent.files)) {
+                    if (!zipEntry.dir && (relativePath.match(/\.(jpg|jpeg|png|webp)$/i))) {
+                        const blob = await zipEntry.async("blob");
+                        imageFiles.push({ name: relativePath, data: blob });
+                    }
+                }
+
+                // Sort files by name to ensure correct order
+                imageFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+                const totalFiles = imageFiles.length;
+                if (totalFiles === 0) {
+                    alert("ZIP dosyası içinde resim bulunamadı!");
+                    setIsUploading(false);
+                    return;
+                }
+
+                for (let i = 0; i < totalFiles; i++) {
+                    // Create a File object from Blob to allow upload
+                    const file = new File([imageFiles[i].data], imageFiles[i].name, { type: imageFiles[i].data.type });
+                    const url = await uploadToCloudinary(file);
+                    uploadedUrls.push(url);
+                    setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+                }
+            } else {
+                // Handle multiple image files
+                const totalFiles = files.length;
+                for (let i = 0; i < totalFiles; i++) {
+                    const url = await uploadToCloudinary(files[i]);
+                    uploadedUrls.push(url);
+                    setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+                }
             }
 
-            // Add uploaded URLs to pages, filtering out empty initial page if exists
+            // Add uploaded URLs to pages
             setFormData(prev => {
                 const currentPages = prev.pages.filter(p => p.trim() !== "");
                 return {
@@ -106,7 +143,7 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
             });
         } catch (error) {
             console.error(error);
-            alert("Bazı dosyalar yüklenirken hata oluştu!");
+            alert("Dosyalar yüklenirken hata oluştu!");
         } finally {
             setIsUploading(false);
             setUploadProgress(0);
@@ -146,6 +183,19 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
                     </div>
 
                     <div className="space-y-2">
+                        <Label htmlFor="publishAt">Yayın Tarihi (İsteğe Bağlı)</Label>
+                        <Input
+                            id="publishAt"
+                            type="datetime-local"
+                            value={formData.publishAt}
+                            onChange={(e) => setFormData({ ...formData, publishAt: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Boş bırakırsanız bölüm hemen yayınlanır. İleri bir tarih seçerseniz o tarihte otomatik açılır.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label>Sayfa URL'leri *</Label>
                             <div className="flex gap-2">
@@ -155,7 +205,7 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
                                         id="bulk-upload"
                                         className="hidden"
                                         multiple
-                                        accept="image/*"
+                                        accept="image/*,.zip"
                                         onChange={handleBulkUpload}
                                         disabled={isUploading}
                                     />
@@ -170,8 +220,8 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
                                             </>
                                         ) : (
                                             <>
-                                                <CloudUpload className="h-3 w-3 mr-1" />
-                                                Toplu Yükle
+                                                <FileArchive className="h-3 w-3 mr-1" />
+                                                Toplu / ZIP Yükle
                                             </>
                                         )}
                                     </Label>
@@ -205,7 +255,7 @@ export function AddChapterModal({ open, onOpenChange, seriesId, seriesTitle }: A
                             ))}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Görselleri Imgur'a yükleyip URL'lerini buraya yapıştırın
+                            Resimleri tek tek veya ZIP dosyası olarak yükleyebilirsiniz. ZIP içindeki resimler isim sırasına göre eklenir.
                         </p>
                     </div>
 

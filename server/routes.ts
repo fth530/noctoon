@@ -2,8 +2,16 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
-import { insertUserSchema, insertCommentSchema } from "@shared/schema";
+import { insertUserSchema, insertCommentSchema, insertSeriesSchema } from "@shared/schema";
 import { sanitizeComment, sanitizeUsername } from "./sanitize";
+import { v2 as cloudinary } from "cloudinary";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Helper function to verify admin authorization
 async function verifyAdmin(req: Request): Promise<{ isAdmin: boolean; error?: string }> {
@@ -27,10 +35,51 @@ async function verifyAdmin(req: Request): Promise<{ isAdmin: boolean; error?: st
   return { isAdmin: true };
 }
 
+// Simple in-memory rate limiter
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 100; // max 100 requests per minute
+
+function rateLimiter(req: Request, res: Response, next: NextFunction) {
+  const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  const now = Date.now();
+
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    // New window
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return next();
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return res.status(429).json({
+      error: "Too many requests. Please try again later.",
+      retryAfter: Math.ceil((record.resetTime - now) / 1000)
+    });
+  }
+
+  record.count++;
+  return next();
+}
+
+// Clean up old rate limit records periodically
+setInterval(() => {
+  const now = Date.now();
+  Array.from(rateLimitMap.entries()).forEach(([ip, record]) => {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  });
+}, 60 * 1000); // Clean every minute
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Apply rate limiter to all API routes
+  app.use('/api', rateLimiter);
+
   // ================== AUTH ROUTES ==================
 
   app.post("/api/auth/login", async (req, res) => {
@@ -120,7 +169,17 @@ export async function registerRoutes(
   app.get("/api/series/:id/chapters", async (req, res) => {
     try {
       const chapters = await storage.getChaptersBySeriesId(req.params.id);
-      res.json(chapters);
+
+      // Check if user is admin
+      const authResult = await verifyAdmin(req);
+      const isAdmin = authResult.isAdmin;
+
+      // Filter chapters based on publish date if not admin
+      const visibleChapters = isAdmin
+        ? chapters
+        : chapters.filter(c => !c.publishAt || new Date(c.publishAt) <= new Date());
+
+      res.json(visibleChapters);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
@@ -286,6 +345,56 @@ export async function registerRoutes(
       const comments = await storage.getAllComments();
       res.json(comments.slice(0, 20));
     } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/series", async (req, res) => {
+    try {
+      const authResult = await verifyAdmin(req);
+      if (!authResult.isAdmin) {
+        return res.status(authResult.error === "Authentication required" ? 401 : 403)
+          .json({ error: authResult.error });
+      }
+
+      const result = insertSeriesSchema.safeParse(req.body);
+
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid input" });
+      }
+
+      const series = await storage.createSeries(result.data);
+      res.status(201).json(series);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/cloudinary-sign", async (req, res) => {
+    try {
+      const authResult = await verifyAdmin(req);
+      if (!authResult.isAdmin) {
+        return res.status(authResult.error === "Authentication required" ? 401 : 403)
+          .json({ error: authResult.error });
+      }
+
+      const timestamp = Math.round(new Date().getTime() / 1000);
+      const signature = cloudinary.utils.api_sign_request(
+        {
+          timestamp,
+          folder: "noctoon",
+        },
+        process.env.CLOUDINARY_API_SECRET || ""
+      );
+
+      res.json({
+        signature,
+        timestamp,
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.CLOUDINARY_API_KEY,
+      });
+    } catch (error) {
+      console.error("Cloudinary sign error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

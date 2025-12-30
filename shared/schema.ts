@@ -43,6 +43,7 @@ export const chapters = pgTable("chapters", {
   number: integer("number").notNull(),
   title: text("title").notNull(),
   pages: text("pages").array().notNull(), // Array of image URLs
+  publishAt: timestamp("publish_at"),
 });
 
 export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true });
@@ -101,7 +102,7 @@ export type ReadingProgress = typeof readingProgress.$inferSelect;
 // Genre options
 export const GENRES = [
   "Aksiyon",
-  "Romantik", 
+  "Romantik",
   "Fantastik",
   "Dram",
   "Komedi",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,58 +6,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { apiRequest } from "@/lib/queryClient";
-import { uploadToCloudinary } from "@/lib/upload";
-import { Loader2, Upload, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { GENRES, STATUS_OPTIONS, type Status, type Series } from "@shared/schema";
+import { Loader2 } from "lucide-react";
 
-interface AddSeriesModalProps {
+interface EditSeriesModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    series: Series;
 }
 
-import { useToast } from "@/hooks/use-toast";
-import { GENRES, STATUS_OPTIONS, type Status } from "@shared/schema";
-
-export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
+export function EditSeriesModal({ open, onOpenChange, series }: EditSeriesModalProps) {
     const queryClient = useQueryClient();
     const { toast } = useToast();
-    const [isUploading, setIsUploading] = useState(false);
     const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        genre: "",
-        cover: "",
-        author: "",
-        status: "ongoing" as "ongoing" | "completed" | "new"
+        title: series.title,
+        description: series.description || "",
+        genre: series.genre,
+        cover: series.cover,
+        author: series.author || "",
+        status: series.status as Status
     });
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsUploading(true);
-        try {
-            const url = await uploadToCloudinary(file);
-            setFormData(prev => ({ ...prev, cover: url }));
-        } catch (error) {
-            console.error(error);
-            toast({
-                title: "Hata",
-                description: "Resim yüklenirken bir hata oluştu.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsUploading(false);
-        }
-    };
+    // Update form when series changes
+    useEffect(() => {
+        setFormData({
+            title: series.title,
+            description: series.description || "",
+            genre: series.genre,
+            cover: series.cover,
+            author: series.author || "",
+            status: series.status as Status
+        });
+    }, [series]);
 
     const mutation = useMutation({
         mutationFn: async (data: typeof formData) => {
             const userStr = localStorage.getItem("noctoon-user");
             const user = userStr ? JSON.parse(userStr) : null;
 
-            const response = await fetch("/api/admin/series", {
-                method: "POST",
+            const response = await fetch(`/api/admin/series/${series.id}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "x-user-id": user?.id || ""
@@ -67,31 +56,23 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || "Failed to create series");
+                throw new Error(error.error || "Failed to update series");
             }
             return response.json();
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/series"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/series", series.id] });
             onOpenChange(false);
-            setFormData({
-                title: "",
-                description: "",
-                genre: "",
-                cover: "",
-                author: "",
-                status: "ongoing"
-            });
             toast({
                 title: "Başarılı",
-                description: "Yeni seri başarıyla oluşturuldu.",
+                description: "Seri başarıyla güncellendi.",
             });
         },
         onError: (error) => {
             toast({
                 title: "Hata",
-                description: error.message || "Seri oluşturulurken bir hata oluştu.",
+                description: error.message || "Seri güncellenirken bir hata oluştu.",
                 variant: "destructive",
             });
         }
@@ -114,7 +95,7 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Yeni Seri Ekle</DialogTitle>
+                    <DialogTitle>Seriyi Düzenle</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
@@ -123,7 +104,6 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
                             id="title"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="Örn: Solo Leveling"
                             required
                         />
                     </div>
@@ -134,7 +114,6 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
                             id="description"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            placeholder="Hikaye özeti..."
                             rows={3}
                         />
                     </div>
@@ -144,7 +123,7 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
                             <Label htmlFor="genre">Tür *</Label>
                             <Select value={formData.genre} onValueChange={(value) => setFormData({ ...formData, genre: value })}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Tür Seçin" />
+                                    <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {GENRES.map((genre) => (
@@ -174,38 +153,14 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="cover">Kapak Resmi *</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="cover"
-                                type="url"
-                                value={formData.cover}
-                                onChange={(e) => setFormData({ ...formData, cover: e.target.value })}
-                                placeholder="https://..."
-                                required
-                                className="flex-1"
-                            />
-                            <div className="relative">
-                                <input
-                                    type="file"
-                                    id="file-upload"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleFileUpload}
-                                    disabled={isUploading}
-                                />
-                                <Label
-                                    htmlFor="file-upload"
-                                    className={`flex items-center justify-center min-h-[40px] px-4 py-2 bg-secondary rounded-md cursor-pointer hover:bg-secondary/80 transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    {isUploading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Upload className="h-4 w-4" />
-                                    )}
-                                </Label>
-                            </div>
-                        </div>
+                        <Label htmlFor="cover">Kapak URL *</Label>
+                        <Input
+                            id="cover"
+                            type="url"
+                            value={formData.cover}
+                            onChange={(e) => setFormData({ ...formData, cover: e.target.value })}
+                            required
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -214,20 +169,8 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
                             id="author"
                             value={formData.author}
                             onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                            placeholder="Yazar adı"
                         />
                     </div>
-
-                    {formData.cover && (
-                        <div className="flex justify-center">
-                            <img
-                                src={formData.cover}
-                                alt="Kapak önizleme"
-                                className="w-24 h-36 object-cover rounded-lg border"
-                                onError={(e) => (e.currentTarget.style.display = 'none')}
-                            />
-                        </div>
-                    )}
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -238,10 +181,6 @@ export function AddSeriesModal({ open, onOpenChange }: AddSeriesModalProps) {
                             Kaydet
                         </Button>
                     </div>
-
-                    {mutation.isError && (
-                        <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
-                    )}
                 </form>
             </DialogContent>
         </Dialog>
